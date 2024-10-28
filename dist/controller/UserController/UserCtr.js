@@ -24,3 +24,4 @@ const UserCtr = {
         catch (error) { }
     })),
 };
+module.exports = UserCtr;
