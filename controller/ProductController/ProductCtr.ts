@@ -1,9 +1,12 @@
+import { Response, Request } from "express";
+const asyncHandler = require("express-async-handler");
+
 const ProductCtr = {
-  createProductCtr: async (req: Request, res: Response) => {
+  createProductCtr: asyncHandler(async (req: Request, res: Response) => {
     try {
     } catch (error: any) {
       throw new Error(error?.message);
     }
-  },
+  }),
 };
 export default ProductCtr;

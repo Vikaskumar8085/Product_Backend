@@ -8,15 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const asyncHandler = require("express-async-handler");
-const ProductCtr = {
-    createProductCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-        }
-        catch (error) {
-            throw new Error(error === null || error === void 0 ? void 0 : error.message);
-        }
-    })),
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-exports.default = ProductCtr;
+Object.defineProperty(exports, "__esModule", { value: true });
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const generateToken = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = yield jsonwebtoken_1.default.sign({ id: id }, "secerate", { expiresIn: "1d" });
+    return token;
+});
+exports.default = generateToken;

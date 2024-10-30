@@ -9,14 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const asyncHandler = require("express-async-handler");
-const ProductCtr = {
-    createProductCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-        }
-        catch (error) {
-            throw new Error(error === null || error === void 0 ? void 0 : error.message);
-        }
-    })),
-};
-exports.default = ProductCtr;
+const verifytoken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split("").join(",");
+        console.log(token);
+    }
+    catch (error) {
+        throw new Error(error === null || error === void 0 ? void 0 : error.message);
+    }
+});
+exports.default = verifytoken;
