@@ -1,26 +1,18 @@
 // import multer from "multer";
-// import { Request } from "express";
+// import path from "path";
 
 // const storage = multer.diskStorage({
-//   destination: (req: Express.Request, file: FileReader, cb: any) => {
-//     cb(null, "/uploads");
+//   destination: function (req, file, cb) {
+//     cb(null, "uploads/");
 //   },
-//   filename: (req: Request, file: FileReader, cb: any) => {
-//     cb(null, new Date.now() + "-" + file?.originalname);
+//   filename: function (req, file, cb) {
+//     cb(
+//       null,
+//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+//     );
 //   },
 // });
 
-// const fileFilter = (req, file, cb) => {
-//   if (
-//     file.metatype === "image/jpg" ||
-//     file.metatype === "image/png" ||
-//     file.metatype === "image/jpeg"
-//   ) {
-//     cb(null, true);
-//   } else {
-//     cb(null, false);
-//   }
-// };
+// const uploadimage = multer({ storage: storage });
 
-// const upload = multer({ storage: storage }, fileFilter);
-// module.exports = upload;
+// export default uploadimage;

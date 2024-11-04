@@ -1,36 +1,41 @@
-import { Response, Request } from "express";
-const asyncHandler = require("express-async-handler");
+import { Response, Request, NextFunction } from "express";
+import asyncHandler from "express-async-handler";
 import User from "../../modals/User/User";
-import { where } from "sequelize";
+import bcrypt from "bcrypt";
+import generateToken from "../../middleware/auth/generateToken";
 
 const UserCtr = {
   // Register ctr
-  registerCtr: asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const { FirstName, LastName, Email, Phone } = req.body;
-      const hashpassword = "w3";
-      const response = await User.create({
-        FirstName,
-        LastName,
-        Email,
-        Password: hashpassword,
-        Phone,
-      });
+  registerCtr: asyncHandler(
+    async (req: Request, res: Response): Promise<any> => {
+      try {
+        let { FirstName, LastName, Email, Phone, Password } = req.body;
 
-      if (!response) {
-        res.status(400);
-        throw new Error("User Not Found");
+        const hashpassword = await bcrypt.genSalt(10, Password);
+        Password = hashpassword;
+        const response = await User.create({
+          FirstName,
+          LastName,
+          Email,
+          Password,
+          Phone,
+        });
+
+        if (!response) {
+          res.status(400);
+          throw new Error("User Not Found");
+        }
+        return res.status(201).json({
+          message: "registration successfully completed",
+          status: "success",
+        });
+      } catch (error: any) {
+        throw new Error(error?.message);
       }
-      return res.status(201).json({
-        message: "registration successfully completed",
-        status: "success",
-      });
-    } catch (error: any) {
-      throw new Error(error?.message);
     }
-  }),
+  ),
   //   SignIn Ctr
-  loginCtr: asyncHandler(async (req: Request, res: Response) => {
+  loginCtr: asyncHandler(async (req: Request, res: Response): Promise<any> => {
     try {
       const response = await User.findOne({
         where: { Email: req.body.Email, Password: req.body.Password },
@@ -40,7 +45,7 @@ const UserCtr = {
         throw new Error("User Not Found Please Sign in");
       }
 
-      const token = "asdf";
+      const token = await generateToken(response.id);
       return res.status(200).json({
         message: "Login Successfully",
         result: token,
@@ -51,29 +56,58 @@ const UserCtr = {
     }
   }),
   // logout Ctr
-  logoutCtr: asyncHandler(async (req: Request, res: Response) => {
+  logoutCtr: asyncHandler(async (req: Request, res: Response): Promise<any> => {
     try {
       return res
         .status(200)
-        .json({ message: "successfully logout", status: "success" });
+        .json({ message: "Successfully logged out", status: "success" });
     } catch (error: any) {
-      throw new Error(error?.message);
+      res.status(500).json({
+        message: error.message || "An error occurred during logout",
+        status: "error",
+      });
     }
   }),
+
   // Profile Ctr
-  profileCtr: asyncHandler(async (req: Request, res: Response) => {
-    try {
-    } catch (error: any) {
-      throw new Error(error?.message);
+  profileCtr: asyncHandler(
+    async (req: Request, res: Response): Promise<any> => {
+      try {
+        const response = await User.findAndCountAll();
+
+        if (!response) {
+          res.status(400);
+          throw new Error("User Not Found Please Sign in");
+        }
+        return res.status(200).json({
+          message: "successfully fetch data",
+          status: "success",
+          result: response,
+        });
+      } catch (error: any) {
+        throw new Error(error?.message);
+      }
     }
-  }),
+  ),
   // forget Ctr
-  forgetpasswordCtr: asyncHandler(async (req: Request, res: Response) => {
-    try {
-    } catch (error: any) {
-      throw new Error(error?.message);
+  forgetpasswordCtr: asyncHandler(
+    async (req: Request, res: Response): Promise<any> => {
+      try {
+        const response = await User.findOne({
+          where: { Email: req.body.Email },
+        });
+        if (!response) {
+          res.status(400);
+          throw new Error("Your Email Not Found");
+        }
+        return res
+          .status(200)
+          .json({ message: "Please check your Email ", status: "success" });
+      } catch (error: any) {
+        throw new Error(error?.message);
+      }
     }
-  }),
+  ),
   // Reset token
   resetpasswordCtr: asyncHandler(async (req: Request, res: Response) => {
     try {
@@ -90,4 +124,4 @@ const UserCtr = {
   }),
 };
 
-module.exports = UserCtr;
+export default UserCtr;

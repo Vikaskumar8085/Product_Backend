@@ -18,7 +18,6 @@ const createApp = (): Express => {
   app.use("/api", indexRouter);
   app.use(globalErrorHandler);
   app.use(notFoundHandler);
-
   return app;
 };
 
