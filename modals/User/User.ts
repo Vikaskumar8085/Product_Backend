@@ -1,10 +1,10 @@
-import { Sequelize, DataTypes, Model, Optional } from "sequelize";
+import {Sequelize, DataTypes, Model, Optional} from "sequelize";
 import Joi from "joi";
 import sequelize from "../../dbconfig/dbconfig";
 
 // Define attributes for User
 interface UserAttributes {
-  id: number;
+  id: string;
   FirstName: string;
   LastName: string;
   Email: string;
@@ -18,7 +18,7 @@ class User
   extends Model<UserAttributes, UserCreationAttributes>
   implements UserAttributes
 {
-  public id!: number;
+  public id!: string;
   public FirstName!: string;
   public LastName!: string;
   public Email!: string;
@@ -44,7 +44,7 @@ class User
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUIDV4,
       autoIncrement: true,
       primaryKey: true,
     },

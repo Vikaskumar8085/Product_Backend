@@ -1,7 +1,7 @@
-import { Response, Request, NextFunction } from "express";
+import {Response, Request, NextFunction} from "express";
 import asyncHandler from "express-async-handler";
 import User from "../../modals/User/User";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import generateToken from "../../middleware/auth/generateToken";
 
 const UserCtr = {
@@ -9,9 +9,9 @@ const UserCtr = {
   registerCtr: asyncHandler(
     async (req: Request, res: Response): Promise<any> => {
       try {
-        let { FirstName, LastName, Email, Phone, Password } = req.body;
+        let {FirstName, LastName, Email, Phone, Password} = req.body;
 
-        const hashpassword = await bcrypt.genSalt(10, Password);
+        const hashpassword = await bcrypt.hash(Password, 10);
         Password = hashpassword;
         const response = await User.create({
           FirstName,
@@ -27,7 +27,7 @@ const UserCtr = {
         }
         return res.status(201).json({
           message: "registration successfully completed",
-          status: "success",
+          success: true,
         });
       } catch (error: any) {
         throw new Error(error?.message);
@@ -38,18 +38,31 @@ const UserCtr = {
   loginCtr: asyncHandler(async (req: Request, res: Response): Promise<any> => {
     try {
       const response = await User.findOne({
-        where: { Email: req.body.Email, Password: req.body.Password },
+        where: {Email: req.body.Email},
       });
+      // console.log(response, "response backend");
       if (!response) {
         res.status(400);
         throw new Error("User Not Found Please Sign in");
       }
 
+      // compare password
+      const checkpassword = await bcrypt.compare(
+        req.body.Password,
+        response.Password
+      );
+      // check password
+
+      if (!checkpassword) {
+        res.status(400);
+        throw new Error("User and Password Not Found");
+      }
+      // generate token
       const token = await generateToken(response.id);
       return res.status(200).json({
         message: "Login Successfully",
         result: token,
-        status: "success",
+        success: true,
       });
     } catch (error: any) {
       throw new Error(error?.message);
@@ -60,7 +73,7 @@ const UserCtr = {
     try {
       return res
         .status(200)
-        .json({ message: "Successfully logged out", status: "success" });
+        .json({message: "Successfully logged out", status: "success"});
     } catch (error: any) {
       res.status(500).json({
         message: error.message || "An error occurred during logout",
@@ -94,15 +107,16 @@ const UserCtr = {
     async (req: Request, res: Response): Promise<any> => {
       try {
         const response = await User.findOne({
-          where: { Email: req.body.Email },
+          where: {Email: req.body.Email},
         });
         if (!response) {
           res.status(400);
-          throw new Error("Your Email Not Found");
+          throw new Error("User Not Found Please enter correct Email Address");
         }
+        console.log(response, "response");
         return res
           .status(200)
-          .json({ message: "Please check your Email ", status: "success" });
+          .json({message: "Please check your Email ", success: true});
       } catch (error: any) {
         throw new Error(error?.message);
       }
