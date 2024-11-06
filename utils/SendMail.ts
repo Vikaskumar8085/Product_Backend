@@ -1,8 +1,10 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
 
 interface SendMailtype {
-  send_to: string;
-  subject: string;
+  send_to: any;
+  subject: any;
   message: any;
 }
 
@@ -11,7 +13,7 @@ const SendMail = ({send_to, subject, message}: SendMailtype) => {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: true,
+      secure: false,
       auth: {
         // TODO: replace `user` and `pass` values from <https://forwardemail.net>
         user: process.env.EMAIL_USER,
@@ -31,5 +33,4 @@ const SendMail = ({send_to, subject, message}: SendMailtype) => {
     console.log(error.message);
   }
 };
-
-module.exports = SendMail;
+export default SendMail;

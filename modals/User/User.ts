@@ -4,7 +4,7 @@ import sequelize from "../../dbconfig/dbconfig";
 
 // Define attributes for User
 interface UserAttributes {
-  id: string;
+  id: number;
   FirstName: string;
   LastName: string;
   Email: string;
@@ -18,7 +18,7 @@ class User
   extends Model<UserAttributes, UserCreationAttributes>
   implements UserAttributes
 {
-  public id!: string;
+  public id!: number;
   public FirstName!: string;
   public LastName!: string;
   public Email!: string;
@@ -44,7 +44,7 @@ class User
 User.init(
   {
     id: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },

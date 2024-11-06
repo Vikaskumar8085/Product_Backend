@@ -12,19 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const asyncHandler = require("express-async-handler");
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const User_1 = __importDefault(require("../../modals/User/User"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const generateToken_1 = __importDefault(require("../../middleware/auth/generateToken"));
 const UserCtr = {
     // Register ctr
-    registerCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    registerCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { FirstName, LastName, Email, Phone } = req.body;
-            const hashpassword = "w3";
+            let { FirstName, LastName, Email, Phone, Password } = req.body;
+            const hashpassword = yield bcrypt_1.default.genSalt(10, Password);
+            Password = hashpassword;
             const response = yield User_1.default.create({
                 FirstName,
                 LastName,
                 Email,
-                Password: hashpassword,
+                Password,
                 Phone,
             });
             if (!response) {
@@ -41,7 +44,7 @@ const UserCtr = {
         }
     })),
     //   SignIn Ctr
-    loginCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    loginCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const response = yield User_1.default.findOne({
                 where: { Email: req.body.Email, Password: req.body.Password },
@@ -50,7 +53,7 @@ const UserCtr = {
                 res.status(400);
                 throw new Error("User Not Found Please Sign in");
             }
-            const token = "asdf";
+            const token = yield (0, generateToken_1.default)(response.id);
             return res.status(200).json({
                 message: "Login Successfully",
                 result: token,
@@ -61,27 +64,66 @@ const UserCtr = {
             throw new Error(error === null || error === void 0 ? void 0 : error.message);
         }
     })),
-    // logout
-    logoutCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // logout Ctr
+    logoutCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             return res
                 .status(200)
-                .json({ message: "successfully logout", status: "success" });
+                .json({ message: "Successfully logged out", status: "success" });
+        }
+        catch (error) {
+            res.status(500).json({
+                message: error.message || "An error occurred during logout",
+                status: "error",
+            });
+        }
+    })),
+    // Profile Ctr
+    profileCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const response = yield User_1.default.findAndCountAll();
+            if (!response) {
+                res.status(400);
+                throw new Error("User Not Found Please Sign in");
+            }
+            return res.status(200).json({
+                message: "successfully fetch data",
+                status: "success",
+                result: response,
+            });
         }
         catch (error) {
             throw new Error(error === null || error === void 0 ? void 0 : error.message);
         }
     })),
-    //
-    forgetpasswordCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // forget Ctr
+    forgetpasswordCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            const response = yield User_1.default.findOne({
+                where: { Email: req.body.Email },
+            });
+            if (!response) {
+                res.status(400);
+                throw new Error("Your Email Not Found");
+            }
+            return res
+                .status(200)
+                .json({ message: "Please check your Email ", status: "success" });
         }
         catch (error) {
             throw new Error(error === null || error === void 0 ? void 0 : error.message);
         }
     })),
     // Reset token
-    resetTokenCtr: asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    resetpasswordCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+        }
+        catch (error) {
+            throw new Error(error === null || error === void 0 ? void 0 : error.message);
+        }
+    })),
+    // Change Password Ctr
+    changePasswordCtr: (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
         }
         catch (error) {
@@ -89,4 +131,4 @@ const UserCtr = {
         }
     })),
 };
-module.exports = UserCtr;
+exports.default = UserCtr;
