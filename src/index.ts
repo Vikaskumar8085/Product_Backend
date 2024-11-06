@@ -3,6 +3,7 @@ import createApp from "./subserver/subserver";
 import sequelize from "../dbconfig/dbconfig";
 import Product from "../modals/Product/Product";
 import User from "../modals/User/User"
+import Token from "../modals/Token/Token"
 dotenv.config();
 const port = process.env.PORT || 4000;
 const app = createApp();
@@ -19,6 +20,7 @@ const db = async () => {
   try{
     await User.sync();
     await Product.sync();
+    await Token.sync();
     console.log("connection established");
   }
   catch(error:any){
