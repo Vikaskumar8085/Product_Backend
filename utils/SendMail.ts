@@ -1,30 +1,35 @@
-// import nodemailer from "nodemailer";
+import nodemailer from "nodemailer";
 
-// const SendMail = () => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       host: "smtp.forwardemail.net",
-//       port: 465,
-//       secure: true,
-//       auth: {
-//         // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-//         user: "REPLACE-WITH-YOUR-ALIAS@YOURDOMAIN.COM",
-//         pass: "REPLACE-WITH-YOUR-GENERATED-PASSWORD",
-//       },
-//     });
+interface SendMailtype {
+  send_to: string;
+  subject: string;
+  message: any;
+}
 
-//     const option = {
-//       from: '"Fred Foo 👻" <foo@example.com>', // sender address
-//       to: "bar@example.com, baz@example.com", // list of receivers
-//       subject: "Hello ✔", // Subject line
-//       text: "Hello world?", // plain text body
-//       html: "<b>Hello world?</b>", // html body
-//     };
+const SendMail = ({send_to, subject, message}: SendMailtype) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: true,
+      auth: {
+        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-//     transporter.sendMail(option);
-//   } catch (error: any) {
-//     console.log(error.message);
-//   }
-// };
+    const option = {
+      from: process.env.EMAIL_USER,
+      to: send_to, // list of receivers
+      subject: subject, // Subject line
+      html: message, // html body
+    };
 
-// module.exports = SendMail;
+    transporter.sendMail(option);
+  } catch (error: any) {
+    console.log(error.message);
+  }
+};
+
+module.exports = SendMail;
