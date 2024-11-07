@@ -90,15 +90,12 @@ Product.init(
     //foreign key
 
     UserId: {
-      type: DataTypes.INTEGER,
-
+      type: DataTypes.BIGINT,
       references: {
         // This is a reference to another model
         model: User,
-
         // This is the column name of the referenced model
         key: 'id',
-
         
       },
       allowNull: false,

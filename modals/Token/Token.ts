@@ -1,6 +1,6 @@
-import { Model, DataTypes, Optional } from 'sequelize';
-import sequelize from "../../dbconfig/dbconfig"
-import User from "../User/User"
+import {Model, DataTypes, Optional} from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
+import User from "../User/User";
 
 // Define an interface for the Token attributes
 interface TokenAttributes {
@@ -12,10 +12,14 @@ interface TokenAttributes {
 }
 
 // Define an interface for the creation attributes
-interface TokenCreationAttributes extends Optional<TokenAttributes, 'id' | 'expireAt'> {}
+interface TokenCreationAttributes
+  extends Optional<TokenAttributes, "id" | "expireAt"> {}
 
 // Create the Token model class
-class Token extends Model<TokenAttributes, TokenCreationAttributes> implements TokenAttributes {
+class Token
+  extends Model<TokenAttributes, TokenCreationAttributes>
+  implements TokenAttributes
+{
   public id!: number;
   public userId!: number;
   public token!: string;
@@ -32,16 +36,10 @@ Token.init(
       primaryKey: true,
     },
     userId: {
-      type: DataTypes.INTEGER,
-
+      type: DataTypes.BIGINT,
       references: {
-        // This is a reference to another model
         model: User,
-
-        // This is the column name of the referenced model
-        key: 'id',
-
-        
+        key: "id",
       },
       allowNull: false,
     },
@@ -59,8 +57,8 @@ Token.init(
   },
   {
     sequelize,
-    modelName: 'Token',
-    tableName: 'Tokens', // Adjust table name as needed
+    modelName: "Token",
+    tableName: "Tokens", // Adjust table name as needed
     timestamps: true, // Adds createdAt and updatedAt fields automatically
   }
 );
