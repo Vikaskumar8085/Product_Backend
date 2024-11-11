@@ -42,9 +42,9 @@ import Product from '../modals/Product/Product';
 import Token from '../modals/Token/Token';
 import Candidate from '../modals/Candidate/Candidate';
 import Designation from '../modals/Designation/Designation';
-import Contact from '../modals/Contacts/Contact';
-import WorkExperience from '../modals/WorkExperience/WorkExperience';
-import Education from '../modals/Eduction/Education';
+// import Contact from '../modals/Contacts/Contact';
+// import WorkExperience from '../modals/WorkExperience/WorkExperience';
+// import Education from '../modals/Eduction/Education';
 import ReasonsForLeaving from '../modals/ReasonForLeaving/ReasonForLeaving';
 
 // Load Environment Variables
@@ -58,25 +58,24 @@ const establishAssociations = () => {
   Designation.hasMany(Candidate, { foreignKey: 'designationId' });
   Candidate.belongsTo(Designation, { foreignKey: 'designationId' });
 
-  // Candidate and Contact Association
-  Candidate.hasMany(Contact, { foreignKey: 'candidateId' });
-  Contact.belongsTo(Candidate, { foreignKey: 'candidateId' });
+  // // Candidate and Contact Association
+  // Candidate.hasMany(Contact, { foreignKey: 'candidateId' });
+  // Contact.belongsTo(Candidate, { foreignKey: 'candidateId' });
 
-  // Candidate and WorkExperience Association
-  Candidate.hasOne(WorkExperience, { foreignKey: 'candidateId' });
-  WorkExperience.belongsTo(Candidate, { foreignKey: 'candidateId' });
+  // // Candidate and WorkExperience Association
+  // Candidate.hasOne(WorkExperience, { foreignKey: 'candidateId' });
+  // WorkExperience.belongsTo(Candidate, { foreignKey: 'candidateId' });
 
-  // Candidate and Education Association
-  Candidate.hasOne(Education, { foreignKey: 'candidateId' });
-  Education.belongsTo(Candidate, { foreignKey: 'candidateId' });
+  // // Candidate and Education Association
+  // Candidate.hasOne(Education, { foreignKey: 'candidateId' });
+  // Education.belongsTo(Candidate, { foreignKey: 'candidateId' });
 
   // Candidate and ReasonsForLeaving Association
   Candidate.hasMany(ReasonsForLeaving, { foreignKey: 'candidateId' });
   ReasonsForLeaving.belongsTo(Candidate, { foreignKey: 'candidateId' });
 
-  // Example association between Product and User if needed
-  User.hasMany(Product, { foreignKey: 'UserId' });
-  Product.belongsTo(User, { foreignKey: 'UserId' });
+  
+
 };
 
 // Sync Database
@@ -86,7 +85,7 @@ const syncDatabase = async () => {
     establishAssociations();
 
     // Sync all models
-    await sequelize.sync({ alter: true }); // Use { force: true } if you want to drop and recreate tables
+    await sequelize.sync(); // Use { force: true } if you want to drop and recreate tables
     console.log('Database synced successfully!');
 
     // Start the server

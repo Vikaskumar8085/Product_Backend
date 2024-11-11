@@ -1,10 +1,12 @@
 import express from "express";
 import userRouter from "./UserRouter";
-import productRouter from "./ProductRouter";
+import candidateRouter from "./CandidateRouter"
+import designationRouter from "./DesignationRouter";
 
 const indexRouter = express.Router();
 
 indexRouter.use("/user", userRouter);
-indexRouter.use("/product", productRouter);
+indexRouter.use("/designation", designationRouter);
+indexRouter.use("/candidate", candidateRouter);
 
 export default indexRouter;

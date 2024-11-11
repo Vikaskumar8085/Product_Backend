@@ -7,12 +7,16 @@ interface CandidateAttributes {
   id: number;
   name: string;
   resumeTitle: string;
+  contactNumber: string;
+  whatsappNumber: string;
   email: string;
+    workExp: string;
+    currentCTC: string;
   currentLocation: string;
   state: string;
   preferredLocation: string;
   dob: Date;
-  designationId: number; // Foreign key to Designation
+  designationId: number; 
   UserId : number; // Foreign key to User
 }
 
@@ -22,7 +26,11 @@ class Candidate extends Model<CandidateAttributes, CandidateCreationAttributes> 
   public id!: number;
   public name!: string;
   public resumeTitle!: string;
+    public contactNumber!: string;
+    public whatsappNumber!: string;
   public email!: string;
+    public workExp!: string;
+    public currentCTC!: string;
   public currentLocation!: string;
   public state!: string;
   public preferredLocation!: string;
@@ -48,10 +56,29 @@ Candidate.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    contactNumber: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    whatsappNumber: {
+      type: DataTypes.STRING,
+      allowNull: false,
+        unique: true,
+    },
+   
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
+    },
+    workExp :{
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    currentCTC: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     currentLocation: {
       type: DataTypes.STRING,
@@ -66,7 +93,7 @@ Candidate.init(
       allowNull: true,
     },
     dob: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATE ,
       allowNull: true,
     },
     designationId: {
@@ -84,7 +111,7 @@ Candidate.init(
         
       },
       allowNull: false,
-    },
+    },     
 
   },
   {
