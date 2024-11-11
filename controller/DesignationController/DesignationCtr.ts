@@ -12,10 +12,16 @@ const DesignationCtr = {
       try {
         const {title} = req.body;
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
+        //check designation existance
+        const checkdesignation = await Designation.findOne({where: {title}});
+        if (checkdesignation) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Designation Already Exist");
         }
         const itemresp = await Designation.create({
           title,
@@ -37,11 +43,11 @@ const DesignationCtr = {
   fetchdesignationCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const userExists: string | any = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: string | any = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
         const fetchitems = await Designation.findAll();
         if (!fetchitems) {
           res.status(StatusCodes.NOT_FOUND);
@@ -62,11 +68,11 @@ const DesignationCtr = {
   reomvedesignationCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const userExists: string | any = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: string | any = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const removeitem = await Designation.findByPk(req.params.id);
         if (!removeitem) {
@@ -88,18 +94,19 @@ const DesignationCtr = {
   editdesignationCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<void | any> => {
       try {
-        const userExists: string | any = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: string | any = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const checkDesigation = await Designation.findByPk(req.params.id);
         if (!checkDesigation) {
           res.status(StatusCodes.BAD_REQUEST);
           throw new Error("Bad Request");
         }
-
+        //check if designation exist
+        
         await checkDesigation.update({title: req.body.title});
         return res
           .status(StatusCodes.OK)
