@@ -1,13 +1,18 @@
-// src/models/Designation.ts
-import { Model, DataTypes } from 'sequelize';
-import sequelize from '../../dbconfig/dbconfig';
+import {Model, DataTypes, Optional} from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
 
 interface DesignationAttributes {
   id: number;
   title: string;
 }
 
-class Designation extends Model<DesignationAttributes> implements DesignationAttributes {
+interface DesignationCreateAttributes
+  extends Optional<DesignationAttributes, "id"> {}
+
+class Designation
+  extends Model<DesignationAttributes, DesignationCreateAttributes>
+  implements DesignationAttributes
+{
   public id!: number;
   public title!: string;
 }
@@ -25,7 +30,7 @@ Designation.init(
     },
   },
   {
-    tableName: 'designations',
+    tableName: "designations",
     sequelize,
   }
 );

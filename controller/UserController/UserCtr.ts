@@ -6,11 +6,10 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import generateToken from "../../middleware/auth/generateToken";
 import SendMail from "../../utils/SendMail";
-import { CustomRequest } from "../../typeReq/customReq";
+import {CustomRequest} from "../../typeReq/customReq";
 import dotenv from "dotenv";
-import { Op } from "sequelize";
+import {Op} from "sequelize";
 dotenv.config();
-
 
 const UserCtr = {
   // Register ctr
@@ -121,36 +120,34 @@ const UserCtr = {
           res.status(400);
           throw new Error("User Not Found Please enter correct Email Address");
         }
-         let resetToken = crypto.randomBytes(32).toString("hex") + response.id;
-  console.log(resetToken);
+        let resetToken = crypto.randomBytes(32).toString("hex") + response.id;
+        console.log(resetToken);
 
-  // Hash token before saving to DB
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-  // Delete token if it exists in DB
-  console.log("forget hashed", hashedToken);
-  let token = await Token.findOne({
-    where: {userId: response.id}
-  });
-  
-  if (token){
-    await token.destroy();
-  } 
-  
-    
-    await Token.create({
-      userId: response.id,
-      token: hashedToken,
-      createdAt: new Date(),
-      expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
-    });
-  
-  
-  const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
-  
-         const message = `
+        // Hash token before saving to DB
+        const hashedToken = crypto
+          .createHash("sha256")
+          .update(resetToken)
+          .digest("hex");
+        // Delete token if it exists in DB
+        console.log("forget hashed", hashedToken);
+        let token = await Token.findOne({
+          where: {userId: response.id},
+        });
+
+        if (token) {
+          await token.destroy();
+        }
+
+        await Token.create({
+          userId: response.id,
+          token: hashedToken,
+          createdAt: new Date(),
+          expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
+        });
+
+        const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+        const message = `
       <h2>Hello ${response.FirstName}</h2>
       <p>Please use the url below to reset your password</p>
       <p>This reset link is valid for only 30minutes.</p>
@@ -160,11 +157,11 @@ const UserCtr = {
       <p>Regards...</p>
       <p>Ignitive Team</p>
     `;
-  const subject = "Password Reset Request";
-  const send_to = response.Email;
-  console.log("send_to", send_to,"message", message, "subject", subject);
-   await SendMail({subject, message, send_to});
- 
+        const subject = "Password Reset Request";
+        const send_to = response.Email;
+        console.log("send_to", send_to, "message", message, "subject", subject);
+        await SendMail({subject, message, send_to});
+
         return res
           .status(200)
           .json({message: "Please check your Email ", success: true});
@@ -188,15 +185,14 @@ const UserCtr = {
       // fIND tOKEN in DB
       console.log(hashedToken, "hashedToken");
       const userToken = await Token.findOne({
-       where: {
+        where: {
           token: hashedToken,
           expireAt: {
-            [Op.gt]: new Date() // checks if expireAt is greater than current date
-          }
-        }
+            [Op.gt]: new Date(), // checks if expireAt is greater than current date
+          },
+        },
       });
       //token not matched i think we need to compare that
-      
 
       if (!userToken) {
         res.status(404);
@@ -252,4 +248,3 @@ const UserCtr = {
 };
 
 export default UserCtr;
-

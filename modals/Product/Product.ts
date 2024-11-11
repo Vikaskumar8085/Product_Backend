@@ -61,8 +61,7 @@ Product.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      
-    },
+          },
     Work_Exp: {
       type: DataTypes.STRING,
       allowNull: false,

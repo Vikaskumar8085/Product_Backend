@@ -1,8 +1,13 @@
-import express from "express";
-import ProductCtr from "../../controller/ProductController/ProductCtr";
+import express, {Request, Response} from "express";
+import verifyToken from "../../middleware/auth/Verifytoken";
 const productRouter = express.Router();
 
-productRouter.post("/add-product", ProductCtr.createProductCtr);
-productRouter.get("/fetch-product", ProductCtr.getProductCtr);
+productRouter.get(
+  "/fetch-product",
+  verifyToken,
+  async (req: Request, res: Response) => {
+    console.log("hello");
+  }
+);
 
 export default productRouter;
