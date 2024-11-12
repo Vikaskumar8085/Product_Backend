@@ -1,7 +1,7 @@
 // src/models/ReasonsForLeaving.ts
-import { Model, DataTypes } from 'sequelize';
-import sequelize from '../../dbconfig/dbconfig';
-import Candidate from '../Candidate/Candidate';
+import {Model, DataTypes, Optional} from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
+import Candidate from "../Candidate/Candidate";
 
 interface ReasonAttributes {
   id: number;
@@ -9,7 +9,12 @@ interface ReasonAttributes {
   reason: string;
 }
 
-class ReasonsForLeaving extends Model<ReasonAttributes> implements ReasonAttributes {
+interface ReasonCreateAttributes extends Optional<ReasonAttributes, "id"> {}
+
+class ReasonsForLeaving
+  extends Model<ReasonAttributes, ReasonCreateAttributes>
+  implements ReasonAttributes
+{
   public id!: number;
   public candidateId!: number;
   public reason!: string;
@@ -26,7 +31,7 @@ ReasonsForLeaving.init(
       type: DataTypes.INTEGER,
       references: {
         model: Candidate,
-        key: 'id',
+        key: "id",
       },
       allowNull: false,
     },
@@ -36,7 +41,7 @@ ReasonsForLeaving.init(
     },
   },
   {
-    tableName: 'reasons_for_leaving',
+    tableName: "reasons_for_leaving",
     sequelize,
   }
 );

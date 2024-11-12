@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import {Request, Response} from "express";
 import User from "../../modals/User/User";
+import stripBom from "strip-bom-stream";
 import Designation from "../../modals/Designation/Designation";
 import {CustomRequest} from "../../typeReq/customReq";
 import Candidate from "../../modals/Candidate/Candidate";
@@ -10,8 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
 import { format } from 'fast-csv';
-
-
+ 
 
 
 const CandidateCtr = {
@@ -157,9 +157,9 @@ const CandidateCtr = {
     console.log(`Processing file: ${filePath}`);
 
     // Read the CSV file
-    fs.createReadStream(filePath)
+    fs.createReadStream(filePath).pipe(stripBom())
       .pipe(csv())
-      .on('data', (row) => {
+      .on('data', (row: any) => {
         candidatesData.push(row);
       })
       .on('end', async () => {

@@ -1,15 +1,18 @@
 // src/models/Region/Region.ts
-import { Model, DataTypes, Optional } from 'sequelize';
-import sequelize from '../../dbconfig/dbconfig';
+import {Model, DataTypes, Optional} from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
 
 interface RegionAttributes {
   id: number;
   name: string;
 }
 
-interface RegionCreationAttributes extends Optional<RegionAttributes, 'id'> {}
+interface RegionCreationAttributes extends Optional<RegionAttributes, "id"> {}
 
-class Region extends Model<RegionAttributes, RegionCreationAttributes> implements RegionAttributes {
+class Region
+  extends Model<RegionAttributes, RegionCreationAttributes>
+  implements RegionAttributes
+{
   public id!: number;
   public name!: string;
 }
@@ -27,7 +30,7 @@ Region.init(
     },
   },
   {
-    tableName: 'Regions',
+    tableName: "Regions",
     sequelize,
   }
 );
