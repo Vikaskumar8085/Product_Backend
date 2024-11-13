@@ -50,7 +50,7 @@ const CandidateCtr = {
                 preferredLocation,
                 dob,
                 designationId: checkDesignation[0].id,
-                UserId
+                UserId: UserId || 6
             }
         ) ;
 
@@ -71,12 +71,15 @@ const CandidateCtr = {
   fetchCandidateCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        // const userExists: string | any = await User.findByPk(req.user);
-        // if (!userExists) {
-        //   res.status(404);
-        //   throw new Error("User Not Found Please Login !");
-        // }
-        const fetchitems = await Candidate.findAll();
+       
+        const fetchitems = await Candidate.findAll({
+          include: [
+            {
+              model: Designation,
+              attributes: ['title']
+            }
+          ]
+        });
         if (!fetchitems) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("");
@@ -157,7 +160,7 @@ const CandidateCtr = {
     console.log(`Processing file: ${filePath}`);
 
     // Read the CSV file
-    fs.createReadStream(filePath).pipe(stripBom())
+    fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (row: any) => {
         candidatesData.push(row);
