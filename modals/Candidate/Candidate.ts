@@ -1,7 +1,7 @@
 // src/models/Candidate.ts
-import { Model, DataTypes, Optional } from 'sequelize';
-import sequelize from '../../dbconfig/dbconfig';
-import User from '../User/User';
+import {Model, DataTypes, Optional} from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
+import User from "../User/User";
 
 interface CandidateAttributes {
   id: number;
@@ -10,35 +10,37 @@ interface CandidateAttributes {
   contactNumber: string;
   whatsappNumber: string;
   email: string;
-    workExp: string;
-    currentCTC: string;
+  workExp: string;
+  currentCTC: string;
   currentLocation: string;
   state: string;
   preferredLocation: string;
   dob: Date;
-  designationId: number; 
-  UserId : number; // Foreign key to User
+  designationId: number;
+  UserId: number; // Foreign key to User
 }
 
-interface CandidateCreationAttributes extends Optional<CandidateAttributes, 'id'> {}
+interface CandidateCreationAttributes
+  extends Optional<CandidateAttributes, "id"> {}
 
-class Candidate extends Model<CandidateAttributes, CandidateCreationAttributes> implements CandidateAttributes {
+class Candidate
+  extends Model<CandidateAttributes, CandidateCreationAttributes>
+  implements CandidateAttributes
+{
   public id!: number;
   public name!: string;
   public resumeTitle!: string;
-    public contactNumber!: string;
-    public whatsappNumber!: string;
+  public contactNumber!: string;
+  public whatsappNumber!: string;
   public email!: string;
-    public workExp!: string;
-    public currentCTC!: string;
+  public workExp!: string;
+  public currentCTC!: string;
   public currentLocation!: string;
   public state!: string;
   public preferredLocation!: string;
   public dob!: Date;
   public designationId!: number;
   public UserId!: number;
-
-  
 }
 
 Candidate.init(
@@ -64,17 +66,17 @@ Candidate.init(
     whatsappNumber: {
       type: DataTypes.STRING,
       allowNull: false,
-        unique: true,
+      unique: true,
     },
-   
+
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    workExp :{
-        type: DataTypes.STRING,
-        allowNull: true
+    workExp: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     currentCTC: {
       type: DataTypes.STRING,
@@ -93,7 +95,7 @@ Candidate.init(
       allowNull: true,
     },
     dob: {
-      type: DataTypes.DATE ,
+      type: DataTypes.DATE,
       allowNull: true,
     },
     designationId: {
@@ -107,15 +109,13 @@ Candidate.init(
         // This is a reference to another model
         model: User,
         // This is the column name of the referenced model
-        key: 'id',
-        
+        key: "id",
       },
       allowNull: false,
-    },     
-
+    },
   },
   {
-    tableName: 'candidates',
+    tableName: "candidates",
     sequelize,
   }
 );

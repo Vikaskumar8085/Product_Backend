@@ -24,7 +24,7 @@ class User extends sequelize_1.Model {
 }
 User.init({
     id: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: sequelize_1.DataTypes.BIGINT,
         autoIncrement: true,
         primaryKey: true,
     },

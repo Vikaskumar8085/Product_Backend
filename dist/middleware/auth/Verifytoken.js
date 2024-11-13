@@ -31,6 +31,8 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         // Attach decoded data to `req.user`
         req.user = decoded;
+        const userid = req.user;
+        userid;
         console.log("req.user", req.user);
         // Call `next()` to pass control to the next middleware/handler
         next();

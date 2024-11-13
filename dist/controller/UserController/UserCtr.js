@@ -131,7 +131,7 @@ const UserCtr = {
             // Delete token if it exists in DB
             console.log("forget hashed", hashedToken);
             let token = yield Token_1.default.findOne({
-                where: { userId: response.id }
+                where: { userId: response.id },
             });
             if (token) {
                 yield token.destroy();
@@ -181,9 +181,9 @@ const UserCtr = {
                 where: {
                     token: hashedToken,
                     expireAt: {
-                        [sequelize_1.Op.gt]: new Date() // checks if expireAt is greater than current date
-                    }
-                }
+                        [sequelize_1.Op.gt]: new Date(), // checks if expireAt is greater than current date
+                    },
+                },
             });
             //token not matched i think we need to compare that
             if (!userToken) {
