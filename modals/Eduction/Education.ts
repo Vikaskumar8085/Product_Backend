@@ -1,7 +1,7 @@
 // src/models/Education.ts
-import { Model, DataTypes } from 'sequelize';
-import sequelize from '../../dbconfig/dbconfig';
-import Candidate from '../Candidate/Candidate';
+import { Model, DataTypes } from "sequelize";
+import sequelize from "../../dbconfig/dbconfig";
+import Candidate from "../Candidate/Candidate";
 
 interface EducationAttributes {
   id: number;
@@ -10,11 +10,15 @@ interface EducationAttributes {
   pgCourse: string;
 }
 
-class Education extends Model<EducationAttributes> implements EducationAttributes {
+class Education
+  extends Model<EducationAttributes>
+  implements EducationAttributes
+{
   public id!: number;
   public candidateId!: number;
-  public ugCourse!: string;
-  public pgCourse!: string;
+  public ugCourse!: string | any;
+  public pgCourse!: string | any;
+  public postCourse!: string | any;
 }
 
 Education.init(
@@ -28,7 +32,7 @@ Education.init(
       type: DataTypes.INTEGER,
       references: {
         model: Candidate,
-        key: 'id',
+        key: "id",
       },
       allowNull: false,
     },
@@ -42,7 +46,7 @@ Education.init(
     },
   },
   {
-    tableName: 'educations',
+    tableName: "educations",
     sequelize,
   }
 );

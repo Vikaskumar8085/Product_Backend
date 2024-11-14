@@ -1,4 +1,4 @@
-import {Model, DataTypes, Optional} from "sequelize";
+import { Model, DataTypes, Optional } from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 
 interface DesignationAttributes {
@@ -20,7 +20,7 @@ class Designation
 Designation.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BIGINT,
       autoIncrement: true,
       primaryKey: true,
     },

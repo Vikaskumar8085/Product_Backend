@@ -4,7 +4,7 @@ import sequelize from "../../dbconfig/dbconfig";
 
 interface RegionAttributes {
   id: number;
-  name: string;
+  Reason_Name: string;
 }
 
 interface RegionCreationAttributes extends Optional<RegionAttributes, "id"> {}
@@ -14,7 +14,7 @@ class Region
   implements RegionAttributes
 {
   public id!: number;
-  public name!: string;
+  public Reason_Name!: string;
 }
 
 Region.init(
@@ -24,7 +24,7 @@ Region.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    Reason_Name: {
       type: DataTypes.STRING,
       allowNull: false,
     },

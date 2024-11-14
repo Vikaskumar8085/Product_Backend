@@ -46,6 +46,8 @@ import Designation from "../modals/Designation/Designation";
 // import WorkExperience from '../modals/WorkExperience/WorkExperience';
 // import Education from '../modals/Eduction/Education';
 import ReasonsForLeaving from "../modals/ReasonForLeaving/ReasonForLeaving";
+import Tag from "../modals/Tag/Tag";
+import Client from "../modals/Client/Client";
 
 // Load Environment Variables
 dotenv.config();
@@ -55,8 +57,8 @@ const app = createApp();
 // Establish Associations
 const establishAssociations = () => {
   // Candidate and Designation Association
-  Designation.hasMany(Candidate, {foreignKey: "designationId"});
-  Candidate.belongsTo(Designation, {foreignKey: "designationId"});
+  Designation.hasMany(Candidate, { foreignKey: "designationId" });
+  Candidate.belongsTo(Designation, { foreignKey: "designationId" });
 
   // // Candidate and Contact Association
   // Candidate.hasMany(Contact, { foreignKey: 'candidateId' });
@@ -71,8 +73,8 @@ const establishAssociations = () => {
   // Education.belongsTo(Candidate, { foreignKey: 'candidateId' });
 
   // Candidate and ReasonsForLeaving Association
-  Candidate.hasMany(ReasonsForLeaving, {foreignKey: "candidateId"});
-  ReasonsForLeaving.belongsTo(Candidate, {foreignKey: "candidateId"});
+  Candidate.hasMany(ReasonsForLeaving, { foreignKey: "candidateId" });
+  ReasonsForLeaving.belongsTo(Candidate, { foreignKey: "candidateId" });
 };
 
 // Sync Database
@@ -80,7 +82,8 @@ const syncDatabase = async () => {
   try {
     // Establish associations
     establishAssociations();
-
+    await Tag.sync();
+    await Client.sync();
     // Sync all models
     await sequelize.sync(); // Use { force: true } if you want to drop and recreate tables
     console.log("Database synced successfully!");
