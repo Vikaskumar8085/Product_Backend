@@ -20,6 +20,7 @@ Tag.init(
   {
     id: {
       type: DataTypes.BIGINT,
+      primaryKey: true,
       allowNull: false,
     },
     Tag_Name: {

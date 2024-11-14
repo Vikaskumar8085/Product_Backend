@@ -36,6 +36,7 @@ Client.init(
   {
     id: {
       type: DataTypes.BIGINT,
+      primaryKey: true,
       autoIncrement: true,
     },
     FirstName: {

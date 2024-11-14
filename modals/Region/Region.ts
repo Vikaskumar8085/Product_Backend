@@ -1,10 +1,10 @@
 // src/models/Region/Region.ts
-import {Model, DataTypes, Optional} from "sequelize";
+import { Model, DataTypes, Optional } from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 
 interface RegionAttributes {
   id: number;
-  Reason_Name: string;
+  Name: string;
 }
 
 interface RegionCreationAttributes extends Optional<RegionAttributes, "id"> {}
@@ -14,7 +14,7 @@ class Region
   implements RegionAttributes
 {
   public id!: number;
-  public Reason_Name!: string;
+  public Name!: string;
 }
 
 Region.init(
@@ -24,7 +24,7 @@ Region.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    Reason_Name: {
+    Name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
