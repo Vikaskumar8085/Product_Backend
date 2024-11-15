@@ -1,6 +1,10 @@
 import { Model, DataTypes, Optional } from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 import User from "../User/User";
+import Designation from "../Designation/Designation";
+import Region from "../Region/Region";
+
+
 
 interface CandidateAttributes {
   id: number;
@@ -12,11 +16,17 @@ interface CandidateAttributes {
   workExp: string;
   currentCTC: string;
   currentLocation: string;
+  currentEmployeer: string;
+  postalAddress: string;
+  lastActive: Date;
   state: string;
   preferredLocation: string;
   dob: Date;
+  remarks: string;
+  UserId: number;
   designationId: number;
-  UserId: number; // Foreign key to User
+  regionId: number;
+  
 }
 
 interface CandidateCreationAttributes
@@ -35,11 +45,16 @@ class Candidate
   public workExp!: string;
   public currentCTC!: string;
   public currentLocation!: string;
+  public postalAddress!: string;
+  public lastActive!: Date;
   public state!: string;
   public preferredLocation!: string;
   public dob!: Date;
   public designationId!: number;
   public UserId!: number;
+  public currentEmployeer!: string;
+  public remarks!: string;
+  public regionId!: number;
 }
 
 Candidate.init(
@@ -89,6 +104,18 @@ Candidate.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    currentEmployeer:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    postalAddress:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastActive:{
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     preferredLocation: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -97,26 +124,73 @@ Candidate.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    designationId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+   
+    remarks: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-
     UserId: {
       type: DataTypes.BIGINT,
       references: {
         // This is a reference to another model
         model: User,
         // This is the column name of the referenced model
-        key: "id",
+        key: 'id',
       },
       allowNull: false,
     },
+    designationId: {
+      type: DataTypes.INTEGER,
+      
+      references: {
+        model: Designation,
+        key: 'id',
+      },
+      allowNull: false,
+      
+    },
+    regionId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: Region,
+        key: 'id',
+      },
+    }
+    
   },
   {
     tableName: "candidates",
     sequelize,
   }
 );
+// Candidate - User (Many-to-One)
+Candidate.belongsTo(User, {
+  foreignKey: "UserId",
+  as: "user"
+});
+User.hasMany(Candidate, {
+  foreignKey: "UserId",
+  as: "candidates"
+});
 
+// // Candidate - Designation (Many-to-One)
+Candidate.belongsTo(Designation, {
+  foreignKey: "designationId",
+  as: "designation"
+});
+Designation.hasMany(Candidate, {
+  foreignKey: "designationId",
+  as: "candidates"
+});
+
+// // // Candidate - Region (Many-to-One)
+Candidate.belongsTo(Region, {
+  foreignKey: "regionId",
+  as: "region"
+});
+Region.hasMany(Candidate, {
+  foreignKey: "regionId",
+  as: "candidates"
+});
 export default Candidate;

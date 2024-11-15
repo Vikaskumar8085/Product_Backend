@@ -7,34 +7,48 @@ import {StatusCodes} from "http-status-codes";
 import csv from "csv-parser";
 import fs from "fs";
 import path from "path";
-import {Op} from "sequelize";
+import {Op, or} from "sequelize";
 import {format} from "fast-csv";
+import { Transaction } from 'sequelize';
+import  sequelize  from '../../dbconfig/dbconfig';
+import CreateCandidateRequest from '../../typeReq/CandidateType';
+import Education from '../../modals/Eduction/Education';
+import CandidateReasons from '../../modals/CandidateReasons/CandidateReasons';
 
 const CandidateCtr = {
   // create Candidate ctr
   createCandidatectr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
+      const transaction: Transaction = await sequelize.transaction();
       try {
-        const {
-          name,
-          resumeTitle,
-          contactNumber,
-          whatsappNumber,
-          email,
-          workExp,
-          currentCTC,
-          currentLocation,
-          state,
-          preferredLocation,
-          dob,
-          designation,
-          UserId,
-        } = req.body;
-        //check designation existance if it is not exist then find or create
-        const checkDesignation = await Designation.findOrCreate({
-          where: {title: designation},
+        const candidateData = req.body;
+        if (!candidateData.name || !candidateData.email || !candidateData.contactNumber) {
+          return res.status(400).json({
+            success: false,
+            message: 'Missing required fields'
+          });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(candidateData.email)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid email format'
+          });
+        }
+              // Phone number validation (assuming 10 digits)
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(candidateData.contactNumber)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Contact number must be 10 digits'
         });
-
+      }
+        //check designation existance if it is not exist then find or create
+        const checkDesignation = await Designation.findByPk(candidateData.designationId);
+        if (!checkDesignation) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Designation Not Found");
+        }
         // check User existance
         // const userExists: number | unknown = await User.findByPk(req.user);
         // if (!userExists) {
@@ -42,27 +56,61 @@ const CandidateCtr = {
         //   throw new Error("User Not Found Please Login !");
         // }
         //check Candidate existance
-        const checkCandidate = await Candidate.findOne({where: {email}});
+        const checkCandidate = await Candidate.findOne({
+          where: {
+            [Op.or]: [
+              { email: candidateData.email },
+              { contactNumber: candidateData.contactNumber },
+              { whatsappNumber: candidateData.whatsappNumber }
+            ]
+          }
+        });
         if (checkCandidate) {
           res.status(StatusCodes.BAD_REQUEST);
           throw new Error("Candidate Already Exist");
         }
         const itemresp = await Candidate.create({
-          name,
-          resumeTitle,
-          contactNumber,
-          whatsappNumber,
-          email,
-          workExp,
-          currentCTC,
-          currentLocation,
-          state,
-          preferredLocation,
-          dob,
-          designationId: checkDesignation[0].id,
-          UserId:1,
-        });
+          name: candidateData.name,
+          resumeTitle: candidateData.resumeTitle,
+          contactNumber: candidateData.contactNumber,
+          whatsappNumber: candidateData.whatsappNumber,
+          email: candidateData.email,
+          workExp: candidateData.workExp || "",
+          currentCTC: candidateData.currentCTC,
+          currentLocation: candidateData.currentLocation,
+          state: candidateData.state,
+          currentEmployeer: candidateData.currentEmployeer || "",
+          postalAddress: candidateData.postalAddress || "",
+          preferredLocation: candidateData.preferredLocation || "",
+          dob: candidateData.dob || new Date(),
+          lastActive: new Date(),
+          remarks: candidateData.remarks || "",
+          UserId: req.user.id,
+          designationId: checkDesignation.id,
+          regionId: candidateData.regionId
+        }, { transaction });
 
+        if (candidateData.education) {
+          await Education.create({
+            candidateId: itemresp.id,
+            ugCourse: candidateData.education.ugCourse || "",
+            pgCourse: candidateData.education.pgCourse || "",
+            id: 1
+          }, { transaction });
+        }
+     // Create candidate reasons if provided
+     if (candidateData.reasonIds && candidateData.reasonIds.length > 0) {
+      const reasonsData = candidateData.reasonIds.map((reasonId:any, index:any) => ({
+        candidateId: itemresp.id,
+        reasonId: reasonId,
+        
+        order: index + 1
+      }));
+
+      await CandidateReasons.bulkCreate(reasonsData, { transaction });
+    }
+
+    await transaction.commit();
         if (!itemresp) {
           res.status(400);
           throw new Error("Bad Request");
@@ -154,7 +202,7 @@ const CandidateCtr = {
     }
   ),
   importCandidates: asyncHandler(
-    async (req: Request, res: Response): Promise<any> => {
+    async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         if (!req.file) {
           return res
@@ -241,7 +289,24 @@ const CandidateCtr = {
                   continue;
                 }
 
-                // Create new Candidate
+        //         // Create new Candidate
+        //         name: candidateData.name,
+        // resumeTitle: candidateData.resumeTitle,
+        // contactNumber: candidateData.contactNumber,
+        // whatsappNumber: candidateData.whatsappNumber,
+        // email: candidateData.email,
+        // workExp: candidateData.workExp,
+        // currentCTC: candidateData.currentCTC,
+        // currentLocation: candidateData.currentLocation,
+        // state: candidateData.state,
+        // currentEmployeer: candidateData.currentEmployeer,
+        // postalAddress: candidateData.postalAddress,
+        // preferredLocation: candidateData.preferredLocation,
+        // dob: candidateData.dob,
+        // remarks: candidateData.remarks,
+        // UserId: candidateData.UserId,
+        // designationId: candidateData.designationId,
+        // regionId: candidateData.regionId
                 await Candidate.create({
                   name: data["Candidate Name"],
                   resumeTitle: data["Resume Title"] || "",
@@ -252,10 +317,16 @@ const CandidateCtr = {
                   currentCTC: data["Current Annual Salary / CTC"],
                   currentLocation: data["Current Location"] || "",
                   state: data.State || "",
+                  currentEmployeer:data["currentEmployeer"] || "",
+                  postalAddress: data["Postal Address"] || "",
                   preferredLocation: data["Preferred Location"] || "",
-                  dob: new Date(data["Age/Date of Birth"]),
+                  dob: new Date(data["Date of Birth"]),
                   designationId: designation.id,
-                  UserId: req.body.UserId || 1, // Assuming UserId is passed in the request body
+                  lastActive: new Date(),
+                  remarks: data["Remarks"] || "",
+                  regionId: 1,
+                  UserId: req.user.id,
+                  
                 });
 
                 importedCount++;
@@ -294,10 +365,17 @@ const CandidateCtr = {
           "Work Exp",
           "Current Annual Salary / CTC",
           "Current Location",
+          "currentEmployeer",
           "State",
+          "Region",
+          "U.G. Course",
+          "P.G. Course",
+          "Post P. G. Course",
+          "Postal Address",
           "Preferred Location",
-          "Age/Date of Birth",
+          "Date of Birth",
           "Designation",
+          
         ];
         // Generate a CSV file dynamically
         const filePath = path.join(__dirname, "../../uploads/template.csv");
