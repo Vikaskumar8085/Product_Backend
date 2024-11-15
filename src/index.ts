@@ -63,6 +63,7 @@ const syncDatabase = async () => {
     await User.sync();
     await Token.sync();
     await Tag.sync();
+<<<<<<< HEAD
     await ReasonsForLeaving.sync();
     await Designation.sync();
     await Region.sync();
@@ -72,6 +73,9 @@ const syncDatabase = async () => {
     await Education.sync();
     // await Client.sync();
     
+=======
+   
+>>>>>>> 6cc10f223a9e851de650efd7724a59dab63621f8
     // Sync all models
     
     console.log("Database synced successfully!");

@@ -1,5 +1,5 @@
 // src/models/Education.ts
-import { Model, DataTypes } from "sequelize";
+import {Model, DataTypes, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 import Candidate from "../Candidate/Candidate";
 
@@ -10,9 +10,14 @@ interface EducationAttributes {
   pgCourse: string;
 }
 
+<<<<<<< HEAD
+=======
+interface CreateEducationAttributes
+  extends Optional<EducationAttributes, "id"> {}
+>>>>>>> 6cc10f223a9e851de650efd7724a59dab63621f8
 
 class Education
-  extends Model<EducationAttributes>
+  extends Model<EducationAttributes, CreateEducationAttributes>
   implements EducationAttributes
 {
   public id!: number;
