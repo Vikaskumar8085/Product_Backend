@@ -83,7 +83,7 @@ const syncDatabase = async () => {
     // Establish associations
     establishAssociations();
     await Tag.sync();
-    await Client.sync();
+   
     // Sync all models
     await sequelize.sync(); // Use { force: true } if you want to drop and recreate tables
     console.log("Database synced successfully!");

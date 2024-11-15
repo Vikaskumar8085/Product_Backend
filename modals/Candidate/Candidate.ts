@@ -102,6 +102,8 @@ Candidate.init(
       allowNull: false,
     },
 
+
+    
     UserId: {
       type: DataTypes.BIGINT,
       references: {
