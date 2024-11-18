@@ -10,7 +10,7 @@ const ReasonCtr = {
       try {
         const additem = await ReasonsForLeaving.create({
           reason: req.body.reason,
-          candidateId: 0,
+        
         });
 
         if (!additem) {

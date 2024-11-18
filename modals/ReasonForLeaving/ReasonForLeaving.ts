@@ -5,7 +5,6 @@ import Candidate from "../Candidate/Candidate";
 
 interface ReasonAttributes {
   id: number;
-  candidateId: number;
   reason: string;
 }
 
@@ -16,7 +15,6 @@ class ReasonsForLeaving
   implements ReasonAttributes
 {
   public id!: number;
-  public candidateId!: number;
   public reason!: string;
 }
 
@@ -26,14 +24,6 @@ ReasonsForLeaving.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    },
-    candidateId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Candidate,
-        key: "id",
-      },
-      allowNull: false,
     },
     reason: {
       type: DataTypes.STRING,

@@ -5,13 +5,16 @@ import Candidate from "../Candidate/Candidate";
 
 interface EducationAttributes {
   id: number;
-  candidateId: number;
+  candidateId:number;
   ugCourse: string;
   pgCourse: string;
 }
 
+<<<<<<< HEAD
+=======
 interface CreateEducationAttributes
   extends Optional<EducationAttributes, "id"> {}
+>>>>>>> 6cc10f223a9e851de650efd7724a59dab63621f8
 
 class Education
   extends Model<EducationAttributes, CreateEducationAttributes>
@@ -31,20 +34,22 @@ Education.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    candidateId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Candidate,
-        key: "id",
-      },
-      allowNull: false,
-    },
     ugCourse: {
       type: DataTypes.STRING,
       allowNull: true,
     },
     pgCourse: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    candidateId: {
+      type: DataTypes.INTEGER, // Make sure this matches `candidates.id`
+      references: {
+        model: Candidate, // Reference the Candidate model
+        key: "id",
+      },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
       allowNull: true,
     },
   },
@@ -54,4 +59,13 @@ Education.init(
   }
 );
 
+// Candidate - Education (One-to-One)
+Candidate.hasOne(Education, {
+  foreignKey: "candidateId",
+  as: "education"
+});
+Education.belongsTo(Candidate, {
+  foreignKey: "candidateId",
+  as: "candidate"
+});
 export default Education;

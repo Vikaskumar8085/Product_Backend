@@ -29,7 +29,7 @@ Tag.init(
     },
   },
   {
-    tableName: "designations",
+    tableName: "tags",
     sequelize,
   }
 );
