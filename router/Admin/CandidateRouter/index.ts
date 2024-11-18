@@ -1,6 +1,6 @@
 import express, {Request, Response} from "express";
-import CandidateCtr from "../../controller/CandidateController/CandidateCtr";
-import upload from "../../middleware/upload";
+import CandidateCtr from "../../../controller/CandidateController/CandidateCtr";
+import upload from "../../../middleware/upload";
 
 const candidateRouter = express.Router();
 

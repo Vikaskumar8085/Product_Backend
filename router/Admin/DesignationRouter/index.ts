@@ -1,5 +1,5 @@
 import express from "express";
-import DesignationCtr from "../../controller/DesignationController/DesignationCtr";
+import DesignationCtr from "../../../controller/DesignationController/DesignationCtr";
 const designationRouter = express.Router();
 
 designationRouter.post("/create-designation", DesignationCtr.createdesignationctr);

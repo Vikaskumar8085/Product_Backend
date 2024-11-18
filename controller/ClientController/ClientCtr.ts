@@ -1,9 +1,9 @@
 import asyncHandler from "express-async-handler";
-import { CustomRequest } from "../../typeReq/customReq";
-import { Response } from "express";
+import {CustomRequest} from "../../typeReq/customReq";
+import {Response} from "express";
 import User from "../../modals/User/User";
 import Client from "../../modals/Client/Client";
-import { StatusCodes } from "http-status-codes";
+import {StatusCodes} from "http-status-codes";
 
 const ClientCtr = {
   // create client
@@ -22,11 +22,11 @@ const ClientCtr = {
         } = req.body;
 
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const response: any = await Client.create({
           FirstName,
@@ -46,7 +46,7 @@ const ClientCtr = {
 
         return res
           .status(StatusCodes.CREATED)
-          .json({ message: "client created successfully", success: true });
+          .json({message: "client created successfully", success: true});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -58,11 +58,11 @@ const ClientCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const response = await Client.findAll();
 
@@ -101,7 +101,7 @@ const ClientCtr = {
 
         return res
           .status(StatusCodes.OK)
-          .json({ message: "remove client successfully", success: true });
+          .json({message: "remove client successfully", success: true});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -147,7 +147,7 @@ const ClientCtr = {
         }
         return res
           .status(StatusCodes.OK)
-          .json({ message: "update client Successfully", success: true });
+          .json({message: "update client Successfully", success: true});
       } catch (error: any) {
         throw new Error(error?.message);
       }

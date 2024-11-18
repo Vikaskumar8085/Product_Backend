@@ -1,5 +1,5 @@
 import express from "express";
-import ReasonCtr from "../../controller/ReasonController/ReasonCtr";
+import ReasonCtr from "../../../controller/ReasonController/ReasonCtr";
 
 const ReasonRouter = express.Router();
 

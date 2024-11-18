@@ -1,5 +1,4 @@
-// src/models/Region/Region.ts
-import { Model, DataTypes, Optional } from "sequelize";
+import {Model, DataTypes, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 
 interface ClientAttributes {
@@ -9,9 +8,9 @@ interface ClientAttributes {
   Email: string;
   Phone: number;
   Address: string;
-  PostCode: number;
-  GstNumber: any;
-  Status: any;
+  PostCode: string;
+  GstNumber: string;
+  Status: "Active" | "InActive";
 }
 
 interface ClientCreationAttributes extends Optional<ClientAttributes, "id"> {}
@@ -21,23 +20,26 @@ class Client
   implements ClientAttributes
 {
   public id!: number;
-  public name!: string;
   public FirstName!: string;
   public LastName!: string;
   public Email!: string;
   public Phone!: number;
   public Address!: string;
-  public PostCode!: number;
-  public GstNumber!: any;
-  public Status!: any;
+  public PostCode!: string;
+  public GstNumber!: string;
+  public Status!: "Active" | "InActive";
+
+  // Timestamps
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Client.init(
   {
     id: {
-      type: DataTypes.BIGINT,
-      primaryKey: true,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
+      primaryKey: true,
     },
     FirstName: {
       type: DataTypes.STRING,
@@ -50,8 +52,17 @@ Client.init(
     Email: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        isEmail: true, // Validates email format
+      },
     },
-    Phone: { type: DataTypes.NUMBER, allowNull: false },
+    Phone: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      validate: {
+        isNumeric: true, // Ensures only numeric values
+      },
+    },
     Address: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -63,6 +74,9 @@ Client.init(
     GstNumber: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        len: [15, 15], // GST number length validation
+      },
     },
     Status: {
       type: DataTypes.ENUM,
@@ -71,8 +85,9 @@ Client.init(
     },
   },
   {
-    tableName: "Client",
+    tableName: "Client", // Pluralized table name
     sequelize,
+    timestamps: true, // Includes createdAt and updatedAt fields
   }
 );
 

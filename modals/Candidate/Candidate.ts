@@ -129,12 +129,6 @@ Candidate.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-<<<<<<< HEAD
-=======
-
-
-    
->>>>>>> 6cc10f223a9e851de650efd7724a59dab63621f8
     UserId: {
       type: DataTypes.BIGINT,
       references: {

@@ -1,5 +1,5 @@
 import express from "express";
-import ClientCtr from "../../controller/ClientController/ClientCtr";
+import ClientCtr from "../../../controller/ClientController/ClientCtr";
 let ClientRouter = express.Router();
 
 ClientRouter.post("/create-client", ClientCtr.createclientctr);

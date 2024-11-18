@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import {DataTypes, Model, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 
 interface TagAttributes {
@@ -19,9 +19,9 @@ class Tag
 Tag.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
-      allowNull: false,
     },
     Tag_Name: {
       type: DataTypes.STRING,
@@ -29,8 +29,9 @@ Tag.init(
     },
   },
   {
-    tableName: "tags",
+    tableName: "Tag",
     sequelize,
+    timestamps: true,
   }
 );
 
