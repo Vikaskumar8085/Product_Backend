@@ -11,11 +11,11 @@ const RegionCtr = {
       try {
         const { Name } = req.body;
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const additmes = await Region.create({ Name });
 

@@ -1,5 +1,5 @@
 // src/models/Region/Region.ts
-import { Model, DataTypes, Optional } from "sequelize";
+import {Model, DataTypes, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 
 interface RegionAttributes {
@@ -32,6 +32,7 @@ Region.init(
   {
     tableName: "Regions",
     sequelize,
+    timestamps: true,
   }
 );
 
