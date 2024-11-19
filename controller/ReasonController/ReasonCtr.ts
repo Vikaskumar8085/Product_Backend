@@ -10,7 +10,6 @@ const ReasonCtr = {
       try {
         const additem = await ReasonsForLeaving.create({
           reason: req.body.reason,
-        
         });
 
         if (!additem) {
@@ -75,7 +74,6 @@ const ReasonCtr = {
           throw new Error("");
         }
         await checkitems.update({reason: req.body.reason});
-
         return res
           .status(StatusCodes.OK)
           .json({message: "updated successfully", success: true});

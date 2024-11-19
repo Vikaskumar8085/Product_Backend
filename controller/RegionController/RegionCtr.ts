@@ -41,11 +41,11 @@ const RegionCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         let fetchitems = await Region.findAll();
         if (!fetchitems) {

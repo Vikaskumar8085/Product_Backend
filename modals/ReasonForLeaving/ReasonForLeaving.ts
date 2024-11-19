@@ -33,6 +33,7 @@ ReasonsForLeaving.init(
   {
     tableName: "reasons_for_leaving",
     sequelize,
+    timestamps: true,
   }
 );
 
