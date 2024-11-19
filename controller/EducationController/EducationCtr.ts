@@ -9,7 +9,7 @@ const EducationCtr = {
   createEducationctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const {ugCourse, pgCourse, postPgCourse, candidateId} = req.body;
+        const {ugCourse, pgCourse, postPgCourse, candidateId=5} = req.body;
         const response = await Education.create({
           ugCourse,
           pgCourse,
