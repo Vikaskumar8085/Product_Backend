@@ -60,17 +60,17 @@ const syncDatabase = async () => {
   try {
     // Establish associations
 
-    await User.sync();
-    await Token.sync();
-    await Tag.sync();
-    await ReasonsForLeaving.sync();
-    await Designation.sync();
-    await Region.sync();
-    await Candidate.sync();
-    await CandidateTags.sync();
-    await CandidateReasons.sync();
-    await Education.sync();
-    await Client.sync();
+    await User.sync({ alter: true });
+    await Token.sync({ alter: true });
+    await Tag.sync({ alter: true });
+    await ReasonsForLeaving.sync({ alter: true });
+    await Designation.sync({ alter: true });
+    await Region.sync({ alter: true });
+    await Candidate.sync({ alter: true });
+    await CandidateTags.sync({ alter: true });
+    await CandidateReasons.sync({ alter: true });
+    await Education.sync({ alter: true });
+    await Client.sync({ alter: true });
 
     // Sync all models
 

@@ -95,7 +95,8 @@ const CandidateCtr = {
             candidateId: itemresp.id,
             ugCourse: candidateData.education.ugCourse || "",
             pgCourse: candidateData.education.pgCourse || "",
-            id: 1
+            postPgCourse: candidateData.education.postPgCourse || "",
+           
           }, { transaction });
         }
      // Create candidate reasons if provided

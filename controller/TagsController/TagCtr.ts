@@ -4,6 +4,11 @@ import {Response} from "express";
 import User from "../../modals/User/User";
 import {StatusCodes} from "http-status-codes";
 import Tag from "../../modals/Tag/Tag";
+import fs from "fs";
+import path from "path";
+import {Op, or} from "sequelize";
+import {format} from "fast-csv";
+import csv from "csv-parser";
 
 const TagCtr = {
   // create tags
@@ -120,7 +125,123 @@ const TagCtr = {
     }
   ),
 
+
   //   imported Tags
+   importTagsCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        console.log(req.file);
+        if (!req.file) {
+          return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({message: "No file uploaded"});
+        }
+
+        const filePath = path.join(
+          __dirname,
+          "../../uploads/",
+          req.file.filename
+        );
+        const TagsData: any[] = [];
+        console.log(`Processing file: ${filePath}`);
+
+        // Read the CSV file
+        fs.createReadStream(filePath)
+          .pipe(csv())
+          .on("data", (row: any) => {
+            TagsData.push(row);
+          })
+          .on("end", async () => {
+            let importedCount = 0;
+            const errors: string[] = [];
+
+            // Process the Tags data
+            for (const data of TagsData) {
+              try {
+                // Basic validations
+                if (!data["Tags Name"] ) {
+                  errors.push(
+                    `Missing required fields for candidate: ${
+                      data["Tags Name"] || "Unknown"
+                    }`
+                  );
+                  continue;
+                }
+                //find or create tag
+                const [tag, created] = await Tag.findOrCreate({
+                  where: {Tag_Name: data["Tags Name"]},
+                  defaults: {Tag_Name: data["Tags Name"]},
+                });
+                if (created) {
+                  importedCount++;
+                }
+                
+                
+              } catch (err: any) {
+                errors.push(
+                  `Failed to import Tag: ${data["Tags Name"]}. Error: ${err.message}`
+                );
+              }
+            }
+
+            // Delete the file after processing
+            fs.unlinkSync(filePath);
+
+            // Return the response with success and error details
+            return res.status(StatusCodes.OK).json({
+              message: `${importedCount} Tags imported successfully`,
+              errors,
+            });
+          });
+      } catch (error: any) {
+        return res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({message: error.message});
+      }
+    }
+  ),
+  returntagsCsvFile: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        const tagsFields = [
+          "Tags Name",
+        ];
+        // Generate a CSV file dynamically
+        const filePath = path.join(__dirname, "../../uploads/template.csv");
+
+        // Create a write stream to save the CSV
+        const writeStream = fs.createWriteStream(filePath);
+
+        // Write data using fast-csv
+        const csvStream = format({headers: true});
+        csvStream.pipe(writeStream);
+
+        // Write header columns to CSV
+        csvStream.write(tagsFields);
+
+        // Optionally include a few rows as sample data
+
+        csvStream.end();
+
+        writeStream.on("finish", () => {
+          // Send the CSV file as a response
+          res.download(filePath, "tags-template.csv", (err) => {
+            if (err) {
+              console.error(err);
+              res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: "Failed to download template CSV",
+              });
+            }
+          });
+        });
+      } catch (error: any) {
+        console.error(error);
+        res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({error: error.message});
+      }
+    }
+  ),
 };
 
 export default TagCtr;

@@ -33,7 +33,7 @@ const ReasonCtr = {
         const fetchitmes = await ReasonsForLeaving.findAll();
         if (!fetchitmes) {
           res.status(StatusCodes.NOT_FOUND);
-          throw new Error("");
+          throw new Error("Reason not found");
         }
         return res
           .status(StatusCodes.OK)
@@ -51,7 +51,7 @@ const ReasonCtr = {
         const removeitem = await ReasonsForLeaving.findByPk(req.params.id);
         if (!removeitem) {
           res.status(StatusCodes.NOT_FOUND);
-          throw new Error("");
+          throw new Error("Reason not found ");
         } else {
           await removeitem.destroy();
         }
@@ -71,7 +71,7 @@ const ReasonCtr = {
         const checkitems = await ReasonsForLeaving.findByPk(req.params.id);
         if (!checkitems) {
           res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("");
+          throw new Error("Reason not found ");
         }
         await checkitems.update({reason: req.body.reason});
         return res
