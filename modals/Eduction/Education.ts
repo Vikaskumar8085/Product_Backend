@@ -8,6 +8,7 @@ interface EducationAttributes {
   candidateId: number;
   ugCourse: string;
   pgCourse: string;
+  postPgCourse: string;
 }
 
 interface CreateEducationAttributes
@@ -21,7 +22,7 @@ class Education
   public candidateId!: number;
   public ugCourse!: string | any;
   public pgCourse!: string | any;
-  public postCourse!: string | any;
+  public postPgCourse!: string | any;
 }
 
 Education.init(
@@ -36,6 +37,10 @@ Education.init(
       allowNull: true,
     },
     pgCourse: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    postPgCourse: {
       type: DataTypes.STRING,
       allowNull: true,
     },

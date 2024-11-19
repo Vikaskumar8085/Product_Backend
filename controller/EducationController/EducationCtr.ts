@@ -9,10 +9,11 @@ const EducationCtr = {
   createEducationctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const {ugCourse, pgCourse, candidateId} = req.body;
+        const {ugCourse, pgCourse, postPgCourse, candidateId} = req.body;
         const response = await Education.create({
           ugCourse,
           pgCourse,
+          postPgCourse,
           candidateId,
         });
         if (!response) {
@@ -33,6 +34,9 @@ const EducationCtr = {
 
   fetchEducationctr: asyncHandler(async (req: CustomRequest, res: Response) => {
     try {
+      const response = await Education.findAll();
+      if (!response) {
+      }
     } catch (error: any) {
       throw new Error(error?.message);
     }
