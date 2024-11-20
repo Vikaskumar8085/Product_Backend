@@ -45,7 +45,7 @@ Education.init(
       allowNull: true,
     },
     candidateId: {
-      type: DataTypes.BIGINT, // Make sure this matches `candidates.id`
+      type: DataTypes.INTEGER, // Make sure this matches `candidates.id`
       references: {
         model: Candidate, // Reference the Candidate model
         key: "id",

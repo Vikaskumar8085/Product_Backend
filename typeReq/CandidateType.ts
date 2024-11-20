@@ -18,8 +18,8 @@ interface CreateCandidateRequest {
     // Foreign Keys
     UserId: number;
     designationId: number;
-    regionId: number;
-    
+    // regionId: number;
+    region: string;
     // Related Data
     education?: {
       ugCourse?: string;
