@@ -69,11 +69,11 @@ const RegionCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check use existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const removeitems = await Region.findByPk(req.params.id);
         if (!removeitems) {
@@ -97,11 +97,11 @@ const RegionCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check use existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         let checkRegion = await Region.findByPk(req.params.id);
         if (!checkRegion) {
@@ -112,7 +112,7 @@ const RegionCtr = {
         }
         return res
           .status(StatusCodes.OK)
-          .json({ message: "updated region successfully", success: true });
+          .json({ message: "updated region successfully", success: true, result: checkRegion });
       } catch (error: any) {
         throw new Error(error?.message);
       }

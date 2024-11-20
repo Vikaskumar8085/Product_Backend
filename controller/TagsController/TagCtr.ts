@@ -77,11 +77,11 @@ const TagCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const checktags = await Tag.findByPk(req.params.id);
         if (!checktags) {
@@ -104,11 +104,11 @@ const TagCtr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(404);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(404);
+        //   throw new Error("User Not Found Please Login !");
+        // }
         const checktags = await Tag.findByPk(req.params.id);
         if (!checktags) {
           res.status(StatusCodes.NOT_FOUND);
@@ -118,7 +118,7 @@ const TagCtr = {
         }
         return res
           .status(StatusCodes.OK)
-          .json({message: "tag updated successfully", success: true});
+          .json({message: "tag updated successfully", success: true, result: checktags});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -190,6 +190,7 @@ const TagCtr = {
             // Return the response with success and error details
             return res.status(StatusCodes.OK).json({
               message: `${importedCount} Tags imported successfully`,
+              result:TagsData,
               errors,
             });
           });
