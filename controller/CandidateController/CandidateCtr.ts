@@ -20,8 +20,9 @@ const CandidateCtr = {
   // create Candidate ctr
   createCandidatectr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
-      const transaction: Transaction = await sequelize.transaction();
+      // const transaction: Transaction = await sequelize.transaction();
       try {
+        console.log("req.body",req.body);
         const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,tags,education} = req.body;
        if (!name || !email || !contactNumber || !whatsappNumber) {
         res.status(StatusCodes.BAD_REQUEST);
@@ -43,7 +44,7 @@ const CandidateCtr = {
         throw new Error("Candidate already exists");
        }
 
-       const newCandidate = await Candidate.create({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,lastActive:new Date(),UserId:req.user.id}, {transaction});
+       const newCandidate = await Candidate.create({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,lastActive:new Date(),UserId:req.user.id});
 
        //now we need to store candidatetags and education
        if (tags) {
@@ -53,36 +54,35 @@ const CandidateCtr = {
             {
               candidateId:newCandidate.id,
               tagId:tag
-            },
-            {transaction}
+            }
           )
         }
        }
        // Store education records if present
     if (education) {
-      const educationData = Array.isArray(education) ? education : JSON.parse(education); // Parse if it's a string
+      // education: { ugCourse: 'dfg', pgCourse: 'edrtgh', postPgCourse: 'rtgyh' }
+      const educationData = {
+        candidateId: newCandidate.id,
+        ugCourse: education.ugCourse || null,
+        pgCourse: education.pgCourse || null,
+        postPgCourse: education.postPgCourse || null
+      };
+      const newEducation = await Education.create(educationData);
 
-      for (const edu of educationData) {
-        // Create education record for the new candidate
-        await Education.create(
-          {
-            candidateId: newCandidate.id,
-            ugCourse: edu.ugCourse,
-            pgCourse: edu.pgCourse,
-            postPgCourse: edu.postPgCourse
-          },
-          { transaction }
-        );
-      }
     }
 
-    // Commit the transaction
-    await transaction.commit();
-       return res.status(StatusCodes.CREATED).json({
-        message:"Candidate created successfully",
-        success:true,
-        result:newCandidate
-       })
+    // we need to append the tags and education into newCandidate extend the newCandidate object
+    const newCandidateExtended = {
+      ...newCandidate.toJSON(),
+        designation: checkDesignation.toJSON(),
+        tags: tags || [],
+        education: education || {}
+    };
+    return res.status(StatusCodes.CREATED).json({
+      message: "Candidate created successfully",  
+      success: true,
+      result: newCandidateExtended
+    });
 
       } catch (error: any) {
         throw new Error(error);
@@ -91,28 +91,38 @@ const CandidateCtr = {
   ),
   //   fetch Candidate ctr
   fetchCandidateCtr: asyncHandler(
-    async (req: CustomRequest, res: Response): Promise<any> => {
-      try {
-        // const userExists: string | any = await User.findByPk(req.user);
-        // if (!userExists) {
-        //   res.status(404);
-        //   throw new Error("User Not Found Please Login !");
-        // }
-        const fetchitems = await Candidate.findAll();
-        if (!fetchitems) {
-          res.status(StatusCodes.NOT_FOUND);
-          throw new Error("Candidate Not Found");
-        }
-        return res.status(StatusCodes.OK).json({
-          message: "Fetch Candidate Successfully",
-          success: true,
-          result: fetchitems,
-        });
-      } catch (error: any) {
-        throw new Error(error);
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+      const fetchitems = await Candidate.findAll({
+        include: [
+          { model: Designation, as: "designation" },
+          { model: Education, as: "education" },
+          { 
+            model: Tag,  // Include Tag model instead of CandidateTags
+            
+            as: "tags"
+          }
+        ]
+      });
+
+      if (!fetchitems || fetchitems.length === 0) {
+        res.status(StatusCodes.NOT_FOUND);
+        throw new Error("Candidates Not Found");
       }
+
+      return res.status(StatusCodes.OK).json({
+        message: "Fetch Candidate Successfully",
+        success: true,
+        result: fetchitems,
+      });
+
+    } catch (error: any) {
+      console.error(error);
+      throw new Error(error);
     }
-  ),
+  }
+),
+  
 
   //   remove Candidate ctr
   reomveCandidateCtr: asyncHandler(
@@ -149,19 +159,60 @@ const CandidateCtr = {
         //   res.status(404);
         //   throw new Error("User Not Found Please Login !");
         // }
-
-        const checkDesigation = await Candidate.findByPk(req.params.id);
-        if (!checkDesigation) {
+        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,tags,education} = req.body;
+        const checkDesignation = await Designation.findByPk(designationId);
+        if (!checkDesignation) {
           res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("Bad Request");
+          throw new Error("Designation Not Found");
         }
-        //check if Candidate exist
+        const checkCandidate = await Candidate.findByPk(req.params.id);
+        if (!checkCandidate) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Candidate Not Found");
+        }
+        await checkCandidate.update({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,lastActive:new Date(),UserId:req.user.id});
+        //now we need to store candidatetags and education
+        if (tags) {
+          // Remove existing tags
+          await CandidateTags.destroy({ where: { candidateId: checkCandidate.id } });
 
-        await checkDesigation.update(req.body);
-        return res
-          .status(StatusCodes.OK)
-          .json({message: "Update Candidate succesfully", success: true});
-      } catch (error: any) {
+          for (const tag of tags) {
+            await CandidateTags.create(
+              {
+                candidateId: checkCandidate.id,
+                tagId: tag
+              }
+            )
+          }
+        }
+        // Store education records if present
+        if (education) {
+          // Remove existing education
+          await Education.destroy({ where: { candidateId: checkCandidate.id } });
+
+          const educationData = {
+            candidateId: checkCandidate.id,
+            ugCourse: education.ugCourse || null,
+            pgCourse: education.pgCourse || null,
+            postPgCourse: education.postPgCourse || null
+          };
+          const newEducation = await Education.create(educationData);
+        }
+        // we need to append the tags and education into newCandidate extend the newCandidate object
+        const updatedCandidate = {
+          ...checkCandidate.toJSON(),
+          designation: checkDesignation.toJSON(),
+          tags: tags || [],
+          education: education || {}
+        };
+        return res.status(StatusCodes.OK).json({
+          message: "Candidate updated successfully",
+          success: true,
+          result: updatedCandidate
+        
+        });
+      }
+      catch (error: any) {
         throw new Error(error);
       }
     }

@@ -46,7 +46,7 @@ const ClientCtr = {
 
         return res
           .status(StatusCodes.CREATED)
-          .json({message: "client created successfully", success: true});
+          .json({message: "client created successfully", success: true, result: response});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -84,12 +84,12 @@ const ClientCtr = {
   removeclientctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // // check User existance
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         const removeItems = await Client.findByPk(req.params.id);
         if (!removeItems) {
@@ -123,11 +123,11 @@ const ClientCtr = {
         } = req.body;
 
         // check User existance
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
-          res.status(StatusCodes.UNAUTHORIZED);
-          throw new Error("User Not Found Please Login !");
-        }
+        // const userExists: number | unknown = await User.findByPk(req.user);
+        // if (!userExists) {
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
 
         let checkClient = await Client.findByPk(req.params.id);
         if (!checkClient) {
@@ -147,7 +147,7 @@ const ClientCtr = {
         }
         return res
           .status(StatusCodes.OK)
-          .json({message: "update client Successfully", success: true});
+          .json({message: "update client Successfully", success: true,result: checkClient});
       } catch (error: any) {
         throw new Error(error?.message);
       }

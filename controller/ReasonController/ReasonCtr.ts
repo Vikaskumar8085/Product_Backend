@@ -18,7 +18,7 @@ const ReasonCtr = {
         }
         return res
           .status(StatusCodes.OK)
-          .json({message: "Reason Created", success: true});
+          .json({message: "Reason Created", success: true, result: additem});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -76,7 +76,7 @@ const ReasonCtr = {
         await checkitems.update({reason: req.body.reason});
         return res
           .status(StatusCodes.OK)
-          .json({message: "updated successfully", success: true});
+          .json({message: "updated successfully", success: true, result: checkitems});
       } catch (error: any) {
         throw new Error(error?.message);
       }

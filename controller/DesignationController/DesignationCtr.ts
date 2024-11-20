@@ -33,7 +33,7 @@ const DesignationCtr = {
 
         return res
           .status(StatusCodes.OK)
-          .json({success: true, message: "designation created Successfully"});
+          .json({success: true, message: "designation created Successfully",result:itemresp});
       } catch (error: any) {
         throw new Error(error);
       }
@@ -110,7 +110,7 @@ const DesignationCtr = {
         await checkDesigation.update({title: req.body.title});
         return res
           .status(StatusCodes.OK)
-          .json({message: "Update designation succesfully", success: true});
+          .json({message: "Update designation succesfully", success: true,result:checkDesigation});
       } catch (error: any) {
         throw new Error(error);
       }
