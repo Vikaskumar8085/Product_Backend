@@ -14,112 +14,76 @@ import  sequelize  from '../../dbconfig/dbconfig';
 import CreateCandidateRequest from '../../typeReq/CandidateType';
 import Education from '../../modals/Eduction/Education';
 import CandidateReasons from '../../modals/CandidateReasons/CandidateReasons';
-
+import CandidateTags from '../../modals/CandidateTags/CandidateTags';
+import Tag from '../../modals/Tag/Tag';
 const CandidateCtr = {
   // create Candidate ctr
   createCandidatectr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       const transaction: Transaction = await sequelize.transaction();
       try {
-        const candidateData = req.body;
-        if (!candidateData.name || !candidateData.email || !candidateData.contactNumber) {
-          return res.status(400).json({
-            success: false,
-            message: 'Missing required fields'
-          });
+        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,tags,education} = req.body;
+       if (!name || !email || !contactNumber || !whatsappNumber) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Bad Request");
+       }
+       const checkDesignation = await Designation.findByPk(designationId);
+       if (!checkDesignation) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Designation Not Found");
+       }
+       //if email or contact number already exist
+       const existingCandidate = await Candidate.findOne({
+        where: {
+          [Op.or]: [{email}, {contactNumber}]
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(candidateData.email)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid email format'
-          });
-        }
-              // Phone number validation (assuming 10 digits)
-      const phoneRegex = /^\d{10}$/;
-      if (!phoneRegex.test(candidateData.contactNumber)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Contact number must be 10 digits'
-        });
-      }
-        //check designation existance if it is not exist then find or create
-        const checkDesignation = await Designation.findByPk(candidateData.designationId);
-        if (!checkDesignation) {
-          res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("Designation Not Found");
-        }
-        // check User existance
-        // const userExists: number | unknown = await User.findByPk(req.user);
-        // if (!userExists) {
-        //   res.status(404);
-        //   throw new Error("User Not Found Please Login !");
-        // }
-        //check Candidate existance
-        const checkCandidate = await Candidate.findOne({
-          where: {
-            [Op.or]: [
-              { email: candidateData.email },
-              { contactNumber: candidateData.contactNumber },
-              { whatsappNumber: candidateData.whatsappNumber }
-            ]
-          }
-        });
-        if (checkCandidate) {
-          res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("Candidate Already Exist");
-        }
-        const itemresp = await Candidate.create({
-          name: candidateData.name,
-          resumeTitle: candidateData.resumeTitle,
-          contactNumber: candidateData.contactNumber,
-          whatsappNumber: candidateData.whatsappNumber,
-          email: candidateData.email,
-          workExp: candidateData.workExp || "",
-          currentCTC: candidateData.currentCTC,
-          currentLocation: candidateData.currentLocation,
-          state: candidateData.state,
-          currentEmployeer: candidateData.currentEmployeer || "",
-          postalAddress: candidateData.postalAddress || "",
-          preferredLocation: candidateData.preferredLocation || "",
-          dob: candidateData.dob || new Date(),
-          lastActive: new Date(),
-          remarks: candidateData.remarks || "",
-          UserId: req.user.id,
-          designationId: checkDesignation.id,
-          regionId: candidateData.regionId
-        }, { transaction });
+       })
+       if (existingCandidate) {
+        res.status(StatusCodes.BAD_REQUEST);
+        throw new Error("Candidate already exists");
+       }
 
-        if (candidateData.education) {
-          await Education.create({
-            candidateId: itemresp.id,
-            ugCourse: candidateData.education.ugCourse || "",
-            pgCourse: candidateData.education.pgCourse || "",
-            postPgCourse: candidateData.education.postPgCourse || "",
-           
-          }, { transaction });
-        }
-     // Create candidate reasons if provided
-     if (candidateData.reasonIds && candidateData.reasonIds.length > 0) {
-      const reasonsData = candidateData.reasonIds.map((reasonId:any, index:any) => ({
-        candidateId: itemresp.id,
-        reasonId: reasonId,
+       const newCandidate = await Candidate.create({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,region,lastActive:new Date(),UserId:req.user.id}, {transaction});
+
+       //now we need to store candidatetags and education
+       if (tags) {
         
-        order: index + 1
-      }));
+        for (const tag of tags) {
+          await CandidateTags.create(
+            {
+              candidateId:newCandidate.id,
+              tagId:tag
+            },
+            {transaction}
+          )
+        }
+       }
+       // Store education records if present
+    if (education) {
+      const educationData = Array.isArray(education) ? education : JSON.parse(education); // Parse if it's a string
 
-      await CandidateReasons.bulkCreate(reasonsData, { transaction });
+      for (const edu of educationData) {
+        // Create education record for the new candidate
+        await Education.create(
+          {
+            candidateId: newCandidate.id,
+            ugCourse: edu.ugCourse,
+            pgCourse: edu.pgCourse,
+            postPgCourse: edu.postPgCourse
+          },
+          { transaction }
+        );
+      }
     }
 
+    // Commit the transaction
     await transaction.commit();
-        if (!itemresp) {
-          res.status(400);
-          throw new Error("Bad Request");
-        }
+       return res.status(StatusCodes.CREATED).json({
+        message:"Candidate created successfully",
+        success:true,
+        result:newCandidate
+       })
 
-        return res
-          .status(StatusCodes.OK)
-          .json({success: true, message: "Candidate created Successfully"});
       } catch (error: any) {
         throw new Error(error);
       }
@@ -249,25 +213,9 @@ const CandidateCtr = {
                 }
 
                 // Validate email format
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(data.Email)) {
-                  errors.push(
-                    `Invalid email format for candidate: ${data["Candidate Name"]} (${data.Email})`
-                  );
-                  continue;
-                }
+             
 
-                // Validate phone numbers (basic check)
-                const phoneRegex = /^\d{10}$/;
-                if (
-                  !phoneRegex.test(data["Contact No"]) ||
-                  !phoneRegex.test(data["Whatsapp No"])
-                ) {
-                  errors.push(
-                    `Invalid contact number(s) for candidate: ${data["Candidate Name"]}`
-                  );
-                  continue;
-                }
+             
 
                 // Check if Designation exists or create a new one
                 const [designation] = await Designation.findOrCreate({
@@ -290,25 +238,8 @@ const CandidateCtr = {
                   continue;
                 }
 
-        //         // Create new Candidate
-        //         name: candidateData.name,
-        // resumeTitle: candidateData.resumeTitle,
-        // contactNumber: candidateData.contactNumber,
-        // whatsappNumber: candidateData.whatsappNumber,
-        // email: candidateData.email,
-        // workExp: candidateData.workExp,
-        // currentCTC: candidateData.currentCTC,
-        // currentLocation: candidateData.currentLocation,
-        // state: candidateData.state,
-        // currentEmployeer: candidateData.currentEmployeer,
-        // postalAddress: candidateData.postalAddress,
-        // preferredLocation: candidateData.preferredLocation,
-        // dob: candidateData.dob,
-        // remarks: candidateData.remarks,
-        // UserId: candidateData.UserId,
-        // designationId: candidateData.designationId,
-        // regionId: candidateData.regionId
-                await Candidate.create({
+        
+                const newCandidate = await Candidate.create({
                   name: data["Candidate Name"],
                   resumeTitle: data["Resume Title"] || "",
                   contactNumber: data["Contact No"],
@@ -325,10 +256,63 @@ const CandidateCtr = {
                   designationId: designation.id,
                   lastActive: new Date(),
                   remarks: data["Remarks"] || "",
-                  regionId: 1,
-                  UserId: req.user.id,
+                  // regionId: 1,
+                  region: data.Region || "",
+                  UserId: 1,
                   
                 });
+                if (data.Tags && typeof data.Tags === 'string') {
+  // Split the string by commas, then trim whitespace around each tag
+  const tags: string[] = data.Tags.split(',').map((tag: string) => tag.trim());
+
+  // Iterate over the array of tags
+  for (const tagName of tags) {
+    // Ensure the tag is not an empty string
+    if (tagName) {
+      try {
+        // Find or create the tag in the Tag table
+        const [tagData] = await Tag.findOrCreate({
+          where: { Tag_Name: tagName }
+        });
+
+        // Create the association between the candidate and the tag
+        await CandidateTags.create({
+          candidateId: newCandidate.id,
+          tagId: tagData.id
+        });
+
+        console.log(`Tag "${tagName}" processed successfully.`);
+      } catch (err) {
+        console.error(`Error processing tag "${tagName}":`, err);
+      }
+    } else {
+      console.warn('Empty tag encountered, skipping.');
+    }
+  }
+} else {
+  console.warn('Invalid Tags format: Expected a comma-separated string.');
+}
+
+                if (data.UG || data.PG || data.PostPG) {
+  // Only create Education data if at least one course is provided
+  const educationData = {
+    candidateId: newCandidate.id,
+    ugCourse: data.UG || null,  // Use `null` if the course is not provided
+    pgCourse: data.PG || null,
+    postPgCourse: data.PostPG || null,
+  };
+
+  try {
+    // Only create Education entry if at least one course is provided
+    await Education.create(educationData);
+    console.log('Education data successfully added for candidate', newCandidate.id);
+  } catch (error) {
+    console.error('Error adding education data:', error);
+  }
+} else {
+  console.log('No valid education data provided for candidate', newCandidate.id);
+}
+
 
                 importedCount++;
               } catch (err: any) {
@@ -369,13 +353,15 @@ const CandidateCtr = {
           "currentEmployeer",
           "State",
           "Region",
-          "U.G. Course",
-          "P.G. Course",
-          "Post P. G. Course",
           "Postal Address",
           "Preferred Location",
           "Date of Birth",
           "Designation",
+          "UG",
+          "PG",
+          "Post PG",
+          "Tags",
+          "Remarks"
           
         ];
         // Generate a CSV file dynamically

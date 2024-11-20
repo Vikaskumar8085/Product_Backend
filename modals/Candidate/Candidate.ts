@@ -25,7 +25,8 @@ interface CandidateAttributes {
   remarks: string;
   UserId: number;
   designationId: number;
-  regionId: number;
+  // regionId: number;
+  region: string;
   
 }
 
@@ -54,7 +55,8 @@ class Candidate
   public UserId!: number;
   public currentEmployeer!: string;
   public remarks!: string;
-  public regionId!: number;
+  // public regionId!: number;
+  public region!: string;
 }
 
 Candidate.init(
@@ -94,15 +96,15 @@ Candidate.init(
     },
     currentCTC: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     currentLocation: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     state: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     currentEmployeer:{
       type: DataTypes.STRING,
@@ -149,13 +151,18 @@ Candidate.init(
       allowNull: false,
       
     },
-    regionId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Region,
-        key: 'id',
-      },
+    // regionId: {
+    //   type: DataTypes.INTEGER,
+    //   allowNull: false,
+    //   references: {
+    //     model: Region,
+    //     key: 'id',
+    //   },
+    // }
+    region:{
+      type: DataTypes.STRING,
+      allowNull: true,
+
     }
     
   },
@@ -184,13 +191,13 @@ Designation.hasMany(Candidate, {
   as: "candidates"
 });
 
-// // // Candidate - Region (Many-to-One)
-Candidate.belongsTo(Region, {
-  foreignKey: "regionId",
-  as: "region"
-});
-Region.hasMany(Candidate, {
-  foreignKey: "regionId",
-  as: "candidates"
-});
+// // // // Candidate - Region (Many-to-One)
+// Candidate.belongsTo(Region, {
+//   foreignKey: "regionId",
+//   as: "region"
+// });
+// Region.hasMany(Candidate, {
+//   foreignKey: "regionId",
+//   as: "candidates"
+// });
 export default Candidate;
