@@ -79,7 +79,11 @@ const DesignationCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Item not Found");
         } else {
-          removeitem.destroy();
+          try {
+            await removeitem.destroy();
+          } catch (error: any) {
+            throw new Error(error);
+          }
         }
         return res.status(StatusCodes.OK).json({
           message: "designation items remove successfully",

@@ -25,8 +25,12 @@ interface CandidateAttributes {
   remarks: string;
   UserId: number;
   designationId: number;
-  // regionId: number;
-  region: string;
+  country: string;
+  city: string;
+  reason1: string;
+  reason2: string;
+  reason3: string;
+
   
 }
 
@@ -56,7 +60,13 @@ class Candidate
   public currentEmployeer!: string;
   public remarks!: string;
   // public regionId!: number;
-  public region!: string;
+  // public region!: string;
+  public country!: string;
+  public city!: string;
+  public reason1!: string;
+  public reason2!: string;
+  public reason3!: string;
+
 }
 
 Candidate.init(
@@ -159,11 +169,31 @@ Candidate.init(
     //     key: 'id',
     //   },
     // }
-    region:{
+    // region:{
+    //   type: DataTypes.STRING,
+    //   allowNull: true,
+
+    // }
+    country: {
       type: DataTypes.STRING,
       allowNull: true,
-
-    }
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    reason1: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    reason2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    reason3: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     
   },
   {
