@@ -208,10 +208,19 @@ const CandidateCtr = {
           const newEducation = await Education.create(educationData);
         }
         // we need to append the tags and education into newCandidate extend the newCandidate object
+        const tagNAme = async (tags: number[]) => {
+          const tagNames: string[] = [];
+          for (const tagId of tags) {
+            const tag:any = await Tag.findByPk(tagId);
+            tagNames.push(tag)
+          }
+          return tagNames;
+        }
+        const tagsName = await tagNAme(tags);
         const updatedCandidate = {
           ...checkCandidate.toJSON(),
           designation: checkDesignation.toJSON(),
-          tags: tags || [],
+          tags: tagsName || [],
           education: education || {}
         };
         return res.status(StatusCodes.OK).json({
@@ -363,7 +372,7 @@ const CandidateCtr = {
     candidateId: newCandidate.id,
     ugCourse: data.UG || null,  // Use `null` if the course is not provided
     pgCourse: data.PG || null,
-    postPgCourse: data.PostPG || null,
+    postPgCourse: data['Post PG'] || null
   };
 
   try {
@@ -390,10 +399,21 @@ const CandidateCtr = {
             fs.unlinkSync(filePath);
 
             // Return the response with success and error details
-            return res.status(StatusCodes.OK).json({
-              message: `${importedCount} candidates imported successfully`,
-              errors,
-            });
+           if (errors.length > 0) {
+              return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "Failed to import candidates",
+                success: false,
+                errors,
+              });
+            }
+            else {
+              return res.status(StatusCodes.CREATED).json({
+                message: `${importedCount} Candidate Successfully Imported`,
+                success: true,
+                
+              });
+            }
+           
           });
       } catch (error: any) {
         return res
