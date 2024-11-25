@@ -10,6 +10,7 @@ interface UserAttributes {
   Email: string;
   Password: string;
   Phone: string;
+  ProfileImage?: string; // Add this line
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
@@ -24,7 +25,7 @@ class User
   public Email!: string;
   public Password!: string;
   public Phone!: string;
-
+  public ProfileImage!: string; // Add this line
   static validateUser(user: UserAttributes) {
     const schema = Joi.object({
       FirstName: Joi.string().min(2).max(50).required(),
@@ -36,6 +37,7 @@ class User
         .min(10)
         .max(15)
         .optional(),
+      ProfileImage: Joi.string().optional(),
     });
     return schema.validate(user);
   }
@@ -68,6 +70,11 @@ User.init(
     Phone: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    ProfileImage: {  // Add this block
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "https://i.ibb.co/4pDNDk1/avatar.png",
     },
   },
   {
