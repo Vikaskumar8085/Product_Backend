@@ -9,6 +9,7 @@ import SendMail from "../../utils/SendMail";
 import {CustomRequest} from "../../typeReq/customReq";
 import dotenv from "dotenv";
 import {Op} from "sequelize";
+import {StatusCodes} from "http-status-codes";
 dotenv.config();
 
 const UserCtr = {
@@ -91,10 +92,14 @@ const UserCtr = {
 
   // Profile Ctr
   profileCtr: asyncHandler(
-    async (req: Request, res: Response): Promise<any> => {
+    async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const response = await User.findAndCountAll();
-
+        // const response = await User.findByPk(req.user.id);
+        //exclude password
+        const response = await User.findOne({
+          where: {id: req.user.id},
+          attributes: {exclude: ["Password"]},
+        });
         if (!response) {
           res.status(400);
           throw new Error("User Not Found Please Sign in");
@@ -245,6 +250,42 @@ const UserCtr = {
       throw new Error(error?.message);
     }
   }),
+  editprofileCtr: asyncHandler(async (req:CustomRequest,res:Response) =>{
+    try {
+      const { FirstName, LastName, Email, Phone } = req.body;
+      const user = await User.findOne({ where: { id: req.user.id } });
+  
+      if (!user) {
+        res.status(401);
+        throw new Error("User not found");
+      }
+  
+      if (!FirstName || !LastName || !Email || !Phone) {
+        res.status(400);
+        throw new Error("Please provide all required fields");
+      }
+  
+      user.FirstName = FirstName;
+      user.LastName = LastName;
+      user.Email = Email;
+      user.Phone = Phone;
+  
+      // Handle uploaded image
+      if (req.file) {
+        user.ProfileImage = `/uploads/profileImages/${req.file.filename}`;
+      }
+  
+      await user.save();
+  
+      res.status(200).json({
+        message: "Profile updated successfully",
+        success: true,
+        result: user,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  })
 };
 
 export default UserCtr;
