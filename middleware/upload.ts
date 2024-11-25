@@ -1,10 +1,10 @@
 // src/middlewares/upload.ts
-import multer from 'multer';
-import path from 'path';
+import multer from "multer";
+import path from "path";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -17,7 +17,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
   if (extName) {
     return cb(null, true);
   } else {
-    cb(new Error('Only CSV files are allowed'));
+    cb(new Error("Only CSV files are allowed"));
   }
 };
 

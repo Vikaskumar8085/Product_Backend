@@ -10,8 +10,10 @@ import Region from "../modals/Region/Region";
 import Tag from "../modals/Tag/Tag";
 import Token from "../modals/Token/Token";
 import User from "../modals/User/User";
+import ClientSecurity from "../modals/ClientSecurity/ClientSecurity";
 
 async function syncdatabase() {
+  await ClientSecurity.sync();
   await User.sync();
   await Token.sync();
   await Tag.sync();
