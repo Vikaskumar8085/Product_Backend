@@ -11,6 +11,7 @@ interface UserAttributes {
   Password: string;
   Phone: string;
   ProfileImage?: string; // Add this line
+  Type?: string; // Add this line
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
@@ -26,6 +27,7 @@ class User
   public Password!: string;
   public Phone!: string;
   public ProfileImage!: string; // Add this line
+  public Type!: string; // Add this line
   static validateUser(user: UserAttributes) {
     const schema = Joi.object({
       FirstName: Joi.string().min(2).max(50).required(),
@@ -76,6 +78,13 @@ User.init(
       allowNull: true,
       defaultValue: "https://i.ibb.co/4pDNDk1/avatar.png",
     },
+    
+    Type: {
+      type: DataTypes.ENUM("superadmin", "client"),
+      allowNull: false,
+      defaultValue: "client",
+    },
+
   },
   {
     sequelize,

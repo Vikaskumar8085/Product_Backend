@@ -4,7 +4,7 @@ import {Response} from "express";
 import User from "../../modals/User/User";
 import Client from "../../modals/Client/Client";
 import {StatusCodes} from "http-status-codes";
-
+import bcrypt from "bcryptjs";
 const ClientCtr = {
   // create client
   createclientctr: asyncHandler(
@@ -27,12 +27,20 @@ const ClientCtr = {
         //   res.status(404);
         //   throw new Error("User Not Found Please Login !");
         // }
+        const password = Phone;
+        const hashpassword = await bcrypt.hash(password, 10);
 
-        const response: any = await Client.create({
+        const clientUser = await User.create({
           FirstName,
           LastName,
           Email,
           Phone,
+          Password: hashpassword,
+        });
+        
+        
+        const response: any = await Client.create({
+          userId: clientUser.id,
           Address,
           PostCode,
           GstNumber,
@@ -43,6 +51,13 @@ const ClientCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Not Found");
         }
+        //merge user and client data for response exclude password field from user
+        response.dataValues = {...response.dataValues, user: 
+          {
+            ...clientUser.dataValues,
+            Password: undefined,
+          }
+        };
 
         return res
           .status(StatusCodes.CREATED)
@@ -128,26 +143,47 @@ const ClientCtr = {
         //   res.status(StatusCodes.UNAUTHORIZED);
         //   throw new Error("User Not Found Please Login !");
         // }
-
-        let checkClient = await Client.findByPk(req.params.id);
+        const checkClient = await User.findByPk(req.params.id);
         if (!checkClient) {
           res.status(StatusCodes.NOT_FOUND);
-          throw new Error("");
-        } else {
-          await checkClient.update({
-            FirstName,
-            LastName,
-            Email,
-            Phone,
-            Address,
-            PostCode,
-            GstNumber,
-            Status,
-          });
+          throw new Error("Client Not Found");
         }
+        checkClient.update({
+          FirstName,
+          LastName,
+          Email,
+          Phone,
+        });
+        
+        
+        
+        const checkClientData = await Client.findOne({where: {userId: req.params.id}});
+        if (!checkClientData) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Client Not Found");
+        }
+        checkClientData.update({
+          Address,
+          PostCode,
+          GstNumber,
+          Status,
+        });
+
+
+        
+        //merge user and client data for response exclude password field from user
+        const response = {
+          ...checkClientData.dataValues,
+          user: {
+            ...checkClient.dataValues,
+            Password: undefined,
+          },
+        };
+        
+        
         return res
           .status(StatusCodes.OK)
-          .json({message: "update client Successfully", success: true,result: checkClient});
+          .json({message: "update client Successfully", success: true,result: response});
       } catch (error: any) {
         throw new Error(error?.message);
       }
