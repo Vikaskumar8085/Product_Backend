@@ -29,7 +29,9 @@ const TagCtr = {
             .json({error: "Tag_Name is required and must be a string."});
         }
 
-        const additmes = await Tag.create({Tag_Name});
+        const additmes = await Tag.create({
+          Tag_Name,
+        });
         if (!additmes) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("tag not found");
@@ -116,18 +118,19 @@ const TagCtr = {
         } else {
           await checktags.update({Tag_Name: req.body.Tag_Name});
         }
-        return res
-          .status(StatusCodes.OK)
-          .json({message: "tag updated successfully", success: true, result: checktags});
+        return res.status(StatusCodes.OK).json({
+          message: "tag updated successfully",
+          success: true,
+          result: checktags,
+        });
       } catch (error: any) {
         throw new Error(error?.message);
       }
     }
   ),
 
-
   //   imported Tags
-   importTagsCtr: asyncHandler(
+  importTagsCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         console.log(req.file);
@@ -159,7 +162,7 @@ const TagCtr = {
             for (const data of TagsData) {
               try {
                 // Basic validations
-                if (!data["Tags Name"] ) {
+                if (!data["Tags Name"]) {
                   errors.push(
                     `Missing required fields for candidate: ${
                       data["Tags Name"] || "Unknown"
@@ -175,8 +178,6 @@ const TagCtr = {
                 if (created) {
                   importedCount++;
                 }
-                
-                
               } catch (err: any) {
                 errors.push(
                   `Failed to import Tag: ${data["Tags Name"]}. Error: ${err.message}`
@@ -190,7 +191,7 @@ const TagCtr = {
             // Return the response with success and error details
             return res.status(StatusCodes.OK).json({
               message: `${importedCount} Tags imported successfully`,
-              result:TagsData,
+              result: TagsData,
               errors,
             });
           });
@@ -204,9 +205,7 @@ const TagCtr = {
   returntagsCsvFile: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const tagsFields = [
-          "Tags Name",
-        ];
+        const tagsFields = ["Tags Name"];
         // Generate a CSV file dynamically
         const filePath = path.join(__dirname, "../../uploads/template.csv");
 
