@@ -2,6 +2,7 @@ import Candidate from "../modals/Candidate/Candidate";
 import CandidateReasons from "../modals/CandidateReasons/CandidateReasons";
 import CandidateTags from "../modals/CandidateTags/CandidateTags";
 import Client from "../modals/Client/Client";
+import Degree from "../modals/DegreeProgram/Degree";
 import Designation from "../modals/Designation/Designation";
 import Education from "../modals/Eduction/Education";
 import ReasonsForLeaving from "../modals/ReasonForLeaving/ReasonForLeaving";
@@ -22,5 +23,6 @@ async function syncdatabase() {
   await CandidateReasons.sync();
   await Education.sync();
   await Client.sync();
+  await Degree.sync();
 }
 export default syncdatabase;
