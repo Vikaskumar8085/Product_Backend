@@ -161,19 +161,7 @@ Candidate.init(
       allowNull: false,
       
     },
-    // regionId: {
-    //   type: DataTypes.INTEGER,
-    //   allowNull: false,
-    //   references: {
-    //     model: Region,
-    //     key: 'id',
-    //   },
-    // }
-    // region:{
-    //   type: DataTypes.STRING,
-    //   allowNull: true,
-
-    // }
+   
     country: {
       type: DataTypes.STRING,
       allowNull: true,

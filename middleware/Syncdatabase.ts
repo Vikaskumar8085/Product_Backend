@@ -11,6 +11,7 @@ import Tag from "../modals/Tag/Tag";
 import Token from "../modals/Token/Token";
 import User from "../modals/User/User";
 import ClientSecurity from "../modals/ClientSecurity/ClientSecurity";
+import ClientTags from "../modals/ClientTags";
 
 async function syncdatabase() {
   await ClientSecurity.sync();
@@ -26,5 +27,6 @@ async function syncdatabase() {
   await Education.sync();
   await Client.sync();
   await Degree.sync();
+  await ClientTags.sync();
 }
 export default syncdatabase;
