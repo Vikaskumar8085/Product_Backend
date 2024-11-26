@@ -118,6 +118,7 @@ const UserCtr = {
   forgetpasswordCtr: asyncHandler(
     async (req: Request, res: Response): Promise<any> => {
       try {
+        console.log(req.body);
         const response = await User.findOne({
           where: {Email: req.body.Email},
         });
@@ -250,42 +251,42 @@ const UserCtr = {
       throw new Error(error?.message);
     }
   }),
-  editprofileCtr: asyncHandler(async (req:CustomRequest,res:Response) =>{
+  editprofileCtr: asyncHandler(async (req: CustomRequest, res: Response) => {
     try {
-      const { FirstName, LastName, Email, Phone } = req.body;
-      const user = await User.findOne({ where: { id: req.user.id } });
-  
+      const {FirstName, LastName, Email, Phone} = req.body;
+      const user = await User.findOne({where: {id: req.user.id}});
+
       if (!user) {
         res.status(401);
         throw new Error("User not found");
       }
-  
+
       if (!FirstName || !LastName || !Email || !Phone) {
         res.status(400);
         throw new Error("Please provide all required fields");
       }
-  
+
       user.FirstName = FirstName;
       user.LastName = LastName;
       user.Email = Email;
       user.Phone = Phone;
-  
+
       // Handle uploaded image
       if (req.file) {
         user.ProfileImage = `/uploads/profileImages/${req.file.filename}`;
       }
-  
+
       await user.save();
-  
+
       res.status(200).json({
         message: "Profile updated successfully",
         success: true,
         result: user,
       });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({error: error.message});
     }
-  })
+  }),
 };
 
 export default UserCtr;

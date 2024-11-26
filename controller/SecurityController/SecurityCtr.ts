@@ -39,7 +39,7 @@ const securityctr = {
           throw new Error("Bad Request");
         }
         return res.status(StatusCodes.CREATED).json({
-          message: "added successfully",
+          message: "fetch data successfully",
           success: true,
           result: fetchsecurity,
         });
