@@ -1,9 +1,11 @@
 import {DataTypes, Model, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
-
+import { ref } from "joi";
+import User from "../User/User";
 interface TagAttributes {
   id: number;
   Tag_Name: string;
+  Created_By: number;
 }
 
 interface CreateTagAttributes extends Optional<TagAttributes, "id"> {}
@@ -14,6 +16,7 @@ class Tag
 {
   public id!: number;
   public Tag_Name!: string;
+  public Created_By!: number;
 }
 
 Tag.init(
@@ -27,6 +30,16 @@ Tag.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    Created_By: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "id",
+      },
+      
+    },
+    
   },
   {
     tableName: "Tag",
@@ -34,5 +47,17 @@ Tag.init(
     timestamps: true,
   }
 );
+
+//write associations here hasone and belongs 
+Tag.belongsTo(User, {
+  foreignKey: "Created_By",
+  as: "user",
+});
+User.hasOne(Tag, {
+  foreignKey: "Created_By",
+  as: "tag",
+});
+
+
 
 export default Tag;
