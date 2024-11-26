@@ -14,7 +14,7 @@ import ClientSecurity from "../modals/ClientSecurity/ClientSecurity";
 
 async function syncdatabase() {
   await ClientSecurity.sync();
-  await User.sync();
+  await User.sync({alter: true});
   await Token.sync();
   await Tag.sync();
   await ReasonsForLeaving.sync();
