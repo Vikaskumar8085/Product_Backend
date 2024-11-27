@@ -132,7 +132,7 @@ const CandidateCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Tags Not Found");
         }
-        console.log("client tags #############",clientTags);
+        
       //now we need to fetch all the candidates based on client tags
       fetchitems = await Candidate.findAll({
         include: [
@@ -142,7 +142,10 @@ const CandidateCtr = {
             model: Tag,  // Include Tag model instead of CandidateTags
             as: "tags",
             where: {
+             [Op.or]:{
               id: clientTags.map((tag: any) => tag.tagId),
+              Created_By: req.user.id
+             }
             }
           }
         ]
