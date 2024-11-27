@@ -18,4 +18,6 @@ userRouter.put(
 );
 userRouter.get("/get-user", verifyToken, UserCtr.getUserCtr);
 
+userRouter.post("/set-question-answer", verifyToken, UserCtr.setSecurityQueAnsCtr);
+
 export default userRouter;

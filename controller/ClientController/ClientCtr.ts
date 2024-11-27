@@ -7,6 +7,7 @@ import {StatusCodes} from "http-status-codes";
 import bcrypt from "bcryptjs";
 import ClientTags from "../../modals/ClientTags";
 import Tag from "../../modals/Tag/Tag";
+import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
 const ClientCtr = {
   // create client
   createclientctr: asyncHandler(
@@ -291,6 +292,26 @@ const ClientCtr = {
             success: true,
             result: flattenedResponse,
           });
+      } catch (error: any) {
+        throw new Error(error?.message);
+      }
+    }
+  ),
+  hasAnswer: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        //check user id is present or not in UserSecurityAnswer table we need boolen value
+        const userSecurityAnswer = await UserSecurityAnswer.findOne({
+          where: {
+            userId: req.user.id,
+          },
+        });
+        return res.status(StatusCodes.OK).json({
+          message: "User has answer",
+          success: true,
+          hasSecurityQuestion: !!userSecurityAnswer,
+        });
+        
       } catch (error: any) {
         throw new Error(error?.message);
       }

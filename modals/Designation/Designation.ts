@@ -31,6 +31,7 @@ Designation.init(
   },
   {
     tableName: "designations",
+    timestamps: false,
     sequelize,
   }
 );

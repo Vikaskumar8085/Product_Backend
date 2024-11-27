@@ -10,6 +10,8 @@ import {CustomRequest} from "../../typeReq/customReq";
 import dotenv from "dotenv";
 import {Op} from "sequelize";
 import {StatusCodes} from "http-status-codes";
+import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
+import SecurityQuestion from "../../modals/SecurityQuestions/index";
 dotenv.config();
 
 const UserCtr = {
@@ -125,10 +127,11 @@ const UserCtr = {
           throw new Error("Bad request");
         }
 
-        return res
-          .status(StatusCodes.OK)
-          .json({success: true, message: "", result: response});
-        console.log(response);
+       
+       
+        return res.status(StatusCodes.OK).json({
+          message: "User fetched",result: response,success: true,
+        });
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -308,6 +311,61 @@ const UserCtr = {
       res.status(500).json({error: error.message});
     }
   }),
+  setSecurityQueAnsCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        // Ensure the user exists
+        const checkUser = await User.findByPk(req.user.id);
+        if (!checkUser) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("User Not Found");
+        }
+  
+        const { questionId, answer } = req.body;
+  
+        // Validate that the question exists in the SecurityQuestion table
+        const securityQuestion = await SecurityQuestion.findByPk(questionId);
+        if (!securityQuestion) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Security question not found");
+        }
+  
+        // Hash the answer using bcrypt
+        const hashedAnswer = await bcrypt.hash(answer, 10);
+  
+        // Check if the user already has an answer for this question
+        const existingAnswer = await UserSecurityAnswer.findOne({
+          where: {
+            userId: req.user.id,
+            questionId,
+          },
+        });
+  
+        if (existingAnswer) {
+          // If an answer exists, update it
+          existingAnswer.answerHash = hashedAnswer;
+          await existingAnswer.save();
+        } else {
+          // If no answer exists, create a new record
+          await UserSecurityAnswer.create({
+            userId: req.user.id,
+            questionId,
+            answerHash: hashedAnswer,
+          });
+        }
+  
+        // Send success response
+        res.status(StatusCodes.OK).json({
+          message: "Security question and answer set successfully",
+          success: true,
+        });
+      } catch (error: any) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: error?.message || "Something went wrong",
+        });
+      }
+    }
+  ),
 };
 
 export default UserCtr;
