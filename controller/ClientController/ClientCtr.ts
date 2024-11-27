@@ -11,7 +11,6 @@ const ClientCtr = {
   // create client
   createclientctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
-      
       try {
         const {
           FirstName,
@@ -41,8 +40,7 @@ const ClientCtr = {
           Phone,
           Password: hashpassword,
         });
-        
-        
+
         const response: any = await Client.create({
           userId: clientUser.id,
           Address,
@@ -51,16 +49,13 @@ const ClientCtr = {
           Status,
         });
         if (tags) {
-        
           for (const tag of tags) {
-            await ClientTags.create(
-              {
-                ClientId:response.id,
-                tagId:tag
-              }
-            )
+            await ClientTags.create({
+              ClientId: response.id,
+              tagId: tag,
+            });
           }
-         }
+        }
         if (!response) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Not Found");
@@ -69,25 +64,29 @@ const ClientCtr = {
         const tagNAme = async (tags: number[]) => {
           const tagNames: string[] = [];
           for (const tagId of tags) {
-            const tag:any = await Tag.findByPk(tagId);
-            tagNames.push(tag)
+            const tag: any = await Tag.findByPk(tagId);
+            tagNames.push(tag);
           }
           return tagNames;
-        }
+        };
         const tagsName = await tagNAme(tags);
-        const { Password,id, ...userData } = clientUser.dataValues; // Exclude password
+        const {Password, id, ...userData} = clientUser.dataValues; // Exclude password
 
-        const flattenedResponse = Object.assign({}, response.dataValues, userData, {tags:tagsName});
+        const flattenedResponse = Object.assign(
+          {},
+          response.dataValues,
+          userData,
+          {tags: tagsName}
+        );
         //also include tags in response
-        
+
         console.log(flattenedResponse);
-        
+
         return res.status(StatusCodes.CREATED).json({
           message: "client created successfully",
           success: true,
           result: flattenedResponse,
         });
-        
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -110,41 +109,48 @@ const ClientCtr = {
             {
               model: User,
               as: "user",
-              attributes: ["FirstName", "LastName", "Email", "Phone", "ProfileImage", "Type"],
+              attributes: [
+                "FirstName",
+                "LastName",
+                "Email",
+                "Phone",
+                "ProfileImage",
+                "Type",
+              ],
             },
-            { 
-              model: Tag,  // Include Tag model instead of CandidateTags
-              
-              as: "tags"
-            }
+            {
+              model: Tag, // Include Tag model instead of CandidateTags
+
+              as: "tags",
+            },
           ],
         });
-        
 
         if (!response) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Not Found");
         }
-         const results = response.map((client) => ({
-        id: client.id,
-        userId: client.userId,
-        Address: client.Address,
-        PostCode: client.PostCode,
-        GstNumber: client.GstNumber,
-        Status: client.Status,
-        createdAt: client.createdAt,
-        updatedAt: client.updatedAt,
-        FirstName: client.user?.FirstName || null,
-        LastName: client.user?.LastName || null,
-        Email: client.user?.Email || null,
-        Phone: client.user?.Phone || null,
-        ProfileImage: client.user?.ProfileImage || null,
-        Type: client.user?.Type || null,
-        tags: client.tags?.map((tag: { id: any; Tag_Name: any; }) => ({
-          id: tag.id,
-          Tag_Name: tag.Tag_Name
-        })) || [], // Ensure tags is always an array
-      }));
+        const results = response.map((client) => ({
+          id: client.id,
+          userId: client.userId,
+          Address: client.Address,
+          PostCode: client.PostCode,
+          GstNumber: client.GstNumber,
+          Status: client.Status,
+          createdAt: client.createdAt,
+          updatedAt: client.updatedAt,
+          FirstName: client.user?.FirstName || null,
+          LastName: client.user?.LastName || null,
+          Email: client.user?.Email || null,
+          Phone: client.user?.Phone || null,
+          ProfileImage: client.user?.ProfileImage || null,
+          Type: client.user?.Type || null,
+          tags:
+            client.tags?.map((tag: {id: any; Tag_Name: any}) => ({
+              id: tag.id,
+              Tag_Name: tag.Tag_Name,
+            })) || [], // Ensure tags is always an array
+        }));
 
         return res.status(StatusCodes.OK).json({
           message: "fetch Client data successfully",
@@ -168,28 +174,28 @@ const ClientCtr = {
         // }
 
         const client = await Client.findByPk(req.params.id);
-      if (!client) {
-        res.status(StatusCodes.NOT_FOUND);
-        throw new Error("Client not found");
-      }
-
-      // Find the associated user by userId
-      const user = await User.findByPk(client.userId);
-      if (!user) {
-        res.status(StatusCodes.NOT_FOUND);
-        throw new Error("Associated user not found");
-      }
-      const tags = await ClientTags.findAll({
-        where: {
-          ClientId: req.params.id
+        if (!client) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Client not found");
         }
-      });
-      // Delete the client and user
-      await client.destroy(); // Delete the client record
-      await user.destroy(); // Delete the associated user record
-      for (const tag of tags) {
-        await tag.destroy();
-      }
+
+        // Find the associated user by userId
+        const user = await User.findByPk(client.userId);
+        if (!user) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Associated user not found");
+        }
+        const tags = await ClientTags.findAll({
+          where: {
+            ClientId: req.params.id,
+          },
+        });
+        // Delete the client and user
+        await client.destroy(); // Delete the client record
+        await user.destroy(); // Delete the associated user record
+        for (const tag of tags) {
+          await tag.destroy();
+        }
 
         return res
           .status(StatusCodes.OK)
@@ -212,27 +218,27 @@ const ClientCtr = {
           PostCode,
           GstNumber,
           Status,
-          tags
+          tags,
         } = req.body;
 
         // check User existance
         // const userExists: number | unknown = await User.findByPk(req.user);
         // if (!userExists) {
-          //   res.status(StatusCodes.UNAUTHORIZED);
-          //   throw new Error("User Not Found Please Login !");
-          // }
-          const checkClientData = await Client.findByPk(req.params.id);
-          if (!checkClientData) {
-            res.status(StatusCodes.NOT_FOUND);
-            throw new Error("Client Not Found");
-          }
-          checkClientData.update({
-            Address,
-            PostCode,
-            GstNumber,
-            Status,
-          });
-          const checkClient = await User.findByPk(checkClientData.userId);
+        //   res.status(StatusCodes.UNAUTHORIZED);
+        //   throw new Error("User Not Found Please Login !");
+        // }
+        const checkClientData = await Client.findByPk(req.params.id);
+        if (!checkClientData) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Client Not Found");
+        }
+        checkClientData.update({
+          Address,
+          PostCode,
+          GstNumber,
+          Status,
+        });
+        const checkClient = await User.findByPk(checkClientData.userId);
         if (!checkClient) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Not Found");
@@ -246,42 +252,45 @@ const ClientCtr = {
         if (tags) {
           const clientTags = await ClientTags.findAll({
             where: {
-              ClientId: checkClientData.id
-            }
+              ClientId: checkClientData.id,
+            },
           });
           for (const tag of clientTags) {
             await tag.destroy();
           }
           for (const tag of tags) {
-            await ClientTags.create(
-              {
-                ClientId:checkClientData.id,
-                tagId:tag
-              }
-            )
+            await ClientTags.create({
+              ClientId: checkClientData.id,
+              tagId: tag,
+            });
           }
         }
 
         const tagNAme = async (tags: number[]) => {
           const tagNames: string[] = [];
           for (const tagId of tags) {
-            const tag:any = await Tag.findByPk(tagId);
-            tagNames.push(tag)
+            const tag: any = await Tag.findByPk(tagId);
+            tagNames.push(tag);
           }
           return tagNames;
-        }
+        };
         const tagsName = await tagNAme(tags);
-        
-
-
-        
         //merge user and client data for response exclude password field from user
-        const { Password,id, ...userData } = checkClient.dataValues; // Exclude Password
-        const flattenedResponse = Object.assign({}, checkClientData.dataValues, userData, {tags:tagsName});
-  
+        const {Password, id, ...userData} = checkClient.dataValues; // Exclude Password
+        const flattenedResponse = Object.assign(
+          {},
+          checkClientData.dataValues,
+          userData,
+          {tags: tagsName}
+        );
+
         return res
           .status(StatusCodes.OK)
-          .json({ message: "Client updated successfully", success: true, result: flattenedResponse });
+          .json({
+            message: "Client updated successfully",
+            success: true,
+            result: flattenedResponse,
+          });
       } catch (error: any) {
         throw new Error(error?.message);
       }

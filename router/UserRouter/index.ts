@@ -1,15 +1,21 @@
 import express from "express";
 import UserCtr from "../../controller/UserController/UserCtr";
-import verifytoken from "../../middleware/auth/Verifytoken";
 import uploadImage from "../../middleware/UploadImage";
+import verifyToken from "../../middleware/auth/Verifytoken";
 const userRouter = express.Router();
 
 userRouter.post("/register", UserCtr.registerCtr);
 userRouter.post("/login", UserCtr.loginCtr);
-userRouter.get("/profile",verifytoken, UserCtr.profileCtr);
+userRouter.get("/profile", verifyToken, UserCtr.profileCtr);
 userRouter.post("/forget-password", UserCtr.forgetpasswordCtr);
-userRouter.post("/change-password",verifytoken, UserCtr.changePasswordCtr);
+userRouter.post("/change-password", verifyToken, UserCtr.changePasswordCtr);
 userRouter.post("/reset-password/:resetToken", UserCtr.resetpasswordCtr);
-userRouter.put("/update-profile",verifytoken,uploadImage.single('ProfileImage'), UserCtr.editprofileCtr);
+userRouter.put(
+  "/update-profile",
+  verifyToken,
+  uploadImage.single("ProfileImage"),
+  UserCtr.editprofileCtr
+);
+userRouter.get("/get-user", verifyToken, UserCtr.getUserCtr);
 
 export default userRouter;

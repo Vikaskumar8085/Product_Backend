@@ -114,6 +114,27 @@ const UserCtr = {
       }
     }
   ),
+
+  getUserCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        const response = await User.findByPk(req.user.id);
+
+        if (!response) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Bad request");
+        }
+
+        return res
+          .status(StatusCodes.OK)
+          .json({success: true, message: "", result: response});
+        console.log(response);
+      } catch (error: any) {
+        throw new Error(error?.message);
+      }
+    }
+  ),
+
   // forget Ctr
   forgetpasswordCtr: asyncHandler(
     async (req: Request, res: Response): Promise<any> => {
