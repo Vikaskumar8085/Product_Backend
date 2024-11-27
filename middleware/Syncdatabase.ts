@@ -12,9 +12,10 @@ import Token from "../modals/Token/Token";
 import User from "../modals/User/User";
 import ClientSecurity from "../modals/ClientSecurity/ClientSecurity";
 import ClientTags from "../modals/ClientTags";
-
+import SecurityQuestion from "../modals/SecurityQuestions/index";
+import UserSecurityAnswer from "../modals/UserSecurityAnswer/index";
 async function syncdatabase() {
-  await ClientSecurity.sync();
+  // await ClientSecurity.sync();
   await User.sync({alter: true});
   await Token.sync();
   await Tag.sync();
@@ -28,5 +29,7 @@ async function syncdatabase() {
   await Client.sync();
   await Degree.sync();
   await ClientTags.sync();
+  await SecurityQuestion.sync();
+  await UserSecurityAnswer.sync();
 }
 export default syncdatabase;

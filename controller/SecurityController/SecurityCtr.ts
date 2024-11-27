@@ -77,6 +77,7 @@ const securityctr = {
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         let {Question, Answer} = req.body;
+        console.log(Question, Answer);
         const updateSecurity = await SecurityQuestion.findByPk(req.params.id);
         if (!updateSecurity) {
           res.status(StatusCodes.NOT_FOUND);
