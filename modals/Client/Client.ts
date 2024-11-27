@@ -22,18 +22,15 @@ class Client
 {
   public id!: number;
   public userId!: number;
-  // public FirstName!: string;
-  // public LastName!: string;
-  // public Email!: string;
-  // public Phone!: number;
+  
   public Address!: string;
   public PostCode!: string;
   public GstNumber!: string;
   public Status!: "Active" | "InActive";
-
-  // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+  public user?: User; 
+  public tags?: any;
 }
 
 Client.init(
@@ -51,28 +48,7 @@ Client.init(
         key: 'id',
       },
     },
-    // FirstName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // LastName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // Email: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    //   validate: {
-    //     isEmail: true, // Validates email format
-    //   },
-    // },
-    // Phone: {
-    //   type: DataTypes.BIGINT,
-    //   allowNull: false,
-    //   validate: {
-    //     isNumeric: true, // Ensures only numeric values
-    //   },
-    // },
+   
     Address: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -101,5 +77,7 @@ Client.init(
     timestamps: true, // Includes createdAt and updatedAt fields
   }
 );
+Client.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasOne(Client, { foreignKey: "userId", as: "client" });
 
 export default Client;

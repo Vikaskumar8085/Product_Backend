@@ -16,13 +16,16 @@ import Education from '../../modals/Eduction/Education';
 import CandidateReasons from '../../modals/CandidateReasons/CandidateReasons';
 import CandidateTags from '../../modals/CandidateTags/CandidateTags';
 import Tag from '../../modals/Tag/Tag';
+import User from '../../modals/User/User';
+import Client from '../../modals/Client/Client';
+import ClientTags from "../../modals/ClientTags";
 const CandidateCtr = {
   // create Candidate ctr
   createCandidatectr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       // const transaction: Transaction = await sequelize.transaction();
       try {
-        console.log("req.body",req.body);
+        
         const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,reason1,reason2,reason3,tags,education} = req.body;
        if (!name || !email || !contactNumber || !whatsappNumber) {
         res.status(StatusCodes.BAD_REQUEST);
@@ -102,7 +105,53 @@ const CandidateCtr = {
   fetchCandidateCtr: asyncHandler(
   async (req: CustomRequest, res: Response): Promise<any> => {
     try {
-      const fetchitems = await Candidate.findAll({
+      const userExists: string | any = await User.findOne({
+        where: {id: req.user.id},
+        //exclude password field
+        attributes: {exclude: ["Password"]},
+      });
+      if (!userExists) {
+        res.status(404);
+        throw new Error("User Not Found Please Login !");
+      }
+      let fetchitems;
+      if (userExists.Type === "client") {
+        
+        const clienId = await Client.findOne({
+          where: {userId: req.user.id},
+        });
+        if (!clienId) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Client Not Found");
+        }
+        const clientTags = await ClientTags.findAll({
+          where: {ClientId: clienId.id},
+          attributes: ["tagId"],
+        });
+        if (!clientTags) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("Client Tags Not Found");
+        }
+        console.log("client tags #############",clientTags);
+      //now we need to fetch all the candidates based on client tags
+      fetchitems = await Candidate.findAll({
+        include: [
+          { model: Designation, as: "designation" },
+          { model: Education, as: "education" },
+          { 
+            model: Tag,  // Include Tag model instead of CandidateTags
+            as: "tags",
+            where: {
+              id: clientTags.map((tag: any) => tag.tagId),
+            }
+          }
+        ]
+      });
+      
+
+      }
+    else {
+      fetchitems = await Candidate.findAll({
         include: [
           { model: Designation, as: "designation" },
           { model: Education, as: "education" },
@@ -113,7 +162,7 @@ const CandidateCtr = {
           }
         ]
       });
-
+    }
       if (!fetchitems || fetchitems.length === 0) {
         res.status(StatusCodes.NOT_FOUND);
         throw new Error("Candidates Not Found");

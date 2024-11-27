@@ -31,6 +31,7 @@ const TagCtr = {
 
         const additmes = await Tag.create({
           Tag_Name,
+          Created_By: req.user.id,
         });
         if (!additmes) {
           res.status(StatusCodes.NOT_FOUND);
@@ -171,9 +172,24 @@ const TagCtr = {
                   continue;
                 }
                 //find or create tag
-                const [tag, created] = await Tag.findOrCreate({
-                  where: {Tag_Name: data["Tags Name"]},
-                  defaults: {Tag_Name: data["Tags Name"]},
+                // const [tag, created] = await Tag.findOrCreate({
+                //   where: {Tag_Name: data["Tags Name"]},
+                  
+                // });
+                const tag = await Tag.findOne({
+                  where: {
+                    [Op.or]: [{Tag_Name: data["Tags Name"]}],
+                  },
+                });
+                if (tag) {
+                  errors.push(
+                    `Tag: ${data["Tags Name"]} already exists.`
+                  );
+                  continue;
+                }
+                const created = await Tag.create({
+                  Tag_Name: data["Tags Name"],
+                  Created_By: req.user.id,
                 });
                 if (created) {
                   importedCount++;
