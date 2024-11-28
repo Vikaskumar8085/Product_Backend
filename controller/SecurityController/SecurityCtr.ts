@@ -1,17 +1,16 @@
 import asyncHandler from "express-async-handler";
 import {CustomRequest} from "../../typeReq/customReq";
 import {Response} from "express";
-import SecurityQuestion from "../../modals/Security/SecurityQuestion";
+import SecurityQuestion from "../../modals/SecurityQuestions";
 import {StatusCodes} from "http-status-codes";
 const securityctr = {
   //  add clien security data
   createsecurity: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        let {Question, Answer} = req.body;
+        let {questionText} = req.body;
         const addsecurity = await SecurityQuestion.create({
-          Question,
-          Answer,
+          questionText,
         });
 
         if (!addsecurity) {
@@ -76,14 +75,14 @@ const securityctr = {
   updatesecurity: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        let {Question, Answer} = req.body;
-        console.log(Question, Answer);
+        let {questionText} = req.body;
+      
         const updateSecurity = await SecurityQuestion.findByPk(req.params.id);
         if (!updateSecurity) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Bad Request");
         } else {
-          await updateSecurity.update({Question, Answer});
+          await updateSecurity.update({questionText});
         }
         return res.status(StatusCodes.OK).json({
           message: "remove security successfully",

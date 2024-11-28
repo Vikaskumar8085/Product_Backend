@@ -4,43 +4,73 @@ import {Response} from "express";
 import User from "../../modals/User/User";
 import {StatusCodes} from "http-status-codes";
 import ClientSecurity from "../../modals/ClientSecurity/ClientSecurity";
+import bcrypt from "bcryptjs";
+import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
+import SecurityQuestion from "../../modals/SecurityQuestions/index";
 const clientsecurityctr = {
   //  add clien security data
-  createclientsecurity: asyncHandler(
+  setSecurityQueAnsCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
-      const {ClientId, QuestionId, Answer} = req.body;
       try {
-        // user Exists
-        const userExists: number | unknown = await User.findByPk(req.user);
-        if (!userExists) {
+        // Ensure the user exists
+        const checkUser = await User.findByPk(req.user.id);
+        if (!checkUser) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("User Not Found");
+        }
+  
+        const { questionsAndAnswers } = req.body;
+        
+        if (!Array.isArray(questionsAndAnswers) || questionsAndAnswers.length === 0) {
           res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("User Not Found Please Login !");
+          throw new Error("Invalid input. Expected an array of question and answer pairs.");
         }
-
-        // Validate required fields
-        if (!ClientId || !QuestionId || !Answer) {
-          return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "ClientId, QuestionId, and Answer are required.",
-            success: false,
+  
+        for (const { questionId, answer } of questionsAndAnswers) {
+          // Validate that the question exists in the SecurityQuestion table
+          const securityQuestion = await SecurityQuestion.findByPk(questionId);
+          if (!securityQuestion) {
+            throw new Error(`Security question with ID ${questionId} not found`);
+          }
+  
+          // Hash the answer using bcrypt
+          const hashedAnswer = await bcrypt.hash(answer, 10);
+  
+          // Check if the user already has an answer for this question
+          const existingAnswer = await UserSecurityAnswer.findOne({
+            where: {
+              userId: req.user.id,
+              questionId,
+            },
           });
+  
+          if (existingAnswer) {
+            // If an answer exists, update it
+            existingAnswer.answerHash = hashedAnswer;
+            await existingAnswer.save();
+          } else {
+            // If no answer exists, create a new record
+            await UserSecurityAnswer.create({
+              userId: req.user.id,
+              questionId,
+              answerHash: hashedAnswer,
+            });
+          }
         }
-
-        const addsecurity = await ClientSecurity.create({
-          ClientId,
-          QuestionId,
-          Answer,
-        });
-
-        return res.status(StatusCodes.CREATED).json({
-          message: "Security entry added successfully.",
+  
+        // Send success response
+        res.status(StatusCodes.OK).json({
+          message: "Security questions and answers set successfully",
           success: true,
-          result: addsecurity,
         });
       } catch (error: any) {
-        throw new Error(error?.message);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: error?.message || "Something went wrong",
+        });
       }
     }
   ),
+  
 
   //   fetch  client security data
   fetchclientsecurity: asyncHandler(
