@@ -64,5 +64,14 @@ UserSecurityAnswer.init({
         foreignKey: 'userId',
         as: 'userSecurityAnswer',
     });
+  //write associations here for question
+    UserSecurityAnswer.belongsTo(SecurityQuestion, {
+        foreignKey: 'questionId',
+        as: 'securityQuestion',
+    });
+    SecurityQuestion.hasOne(UserSecurityAnswer, {
+        foreignKey: 'questionId',
+        as: 'userSecurityAnswer',
+    });
 
 export default UserSecurityAnswer;

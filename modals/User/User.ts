@@ -63,7 +63,7 @@ User.init(
     Email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: 'EmailUnique',
     },
     Password: {
       type: DataTypes.STRING,

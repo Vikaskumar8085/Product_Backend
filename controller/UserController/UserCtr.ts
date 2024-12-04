@@ -297,11 +297,13 @@ const UserCtr = {
 
       // Handle uploaded image
       if (req.file) {
+        console.log("images",req.file);
         user.ProfileImage = `/uploads/profileImages/${req.file.filename}`;
       }
 
       await user.save();
-
+      //exclude password
+      
       res.status(200).json({
         message: "Profile updated successfully",
         success: true,

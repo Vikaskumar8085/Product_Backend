@@ -7,6 +7,9 @@ import ClientSecurity from "../../modals/ClientSecurity/ClientSecurity";
 import bcrypt from "bcryptjs";
 import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
 import SecurityQuestion from "../../modals/SecurityQuestions/index";
+import Token from "../../modals/Token/Token";
+import crypto from "crypto";
+
 const clientsecurityctr = {
   //  add clien security data
   setSecurityQueAnsCtr: asyncHandler(
@@ -71,7 +74,151 @@ const clientsecurityctr = {
     }
   ),
   
+  checkSecurityQueAnsCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        // Ensure the user exists
+        const {Email} = req.body;
+        console.log(Email,"email called");
+        const checkUser = await User.findOne({
+          where: {Email},
+        });
+        if (!checkUser) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("User Not Found");
+        }
+        //we need to send the questions of the user in response
+        const Allquestions = await UserSecurityAnswer.findAll({
+          where: {userId: checkUser.id},
+          include: {
+            model: SecurityQuestion,
+            as: 'securityQuestion',
+          },
+          //exclude everything except id
+          attributes: ['id'],
+        });
+        if (!Allquestions || Allquestions.length === 0) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("No security questions found for this user");
+        }
+        return res.status(StatusCodes.OK).json({
+          message: "Security questions fetched successfully",
+          success: true,
+          result: Allquestions,
+          email: Email,
+        });
+      } catch (error: any) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: error?.message || "Something went wrong",
+        });
+      }
+    }
+  ),
+  verifySecurityQueAnsCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        const { Email, answers } = req.body; // `answers` contains questionId and answer pairs
+        console.log(Email, "email called");
+  
+        // Check if the user exists
+        const checkUser = await User.findOne({
+          where: { Email },
+        });
+        if (!checkUser) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("User Not Found");
+        }
+  
+        const userId = checkUser.id;
+  
+        // Iterate over answers and validate
+        const validationResults = await Promise.all(
+          answers.map(async (answerObj: { questionId: number; answer: string }) => {
+            const { questionId, answer } = answerObj;
+  
+            // Fetch the security answer record for the user and question
+            const securityAnswerRecord = await UserSecurityAnswer.findOne({
+              where: { userId, questionId },
+              include: [
+                {
+                  model: SecurityQuestion,
+                  as: "securityQuestion",
+                },
+              ],
+            });
+  
+            if (!securityAnswerRecord) {
+              return {
+                questionId,
+                success: false,
+                message: "Security question not found for this user.",
+              };
+            }
+  
+            // Compare provided answer hash with the stored hash
+            const isAnswerValid = await bcrypt.compare(
+              answer,
+              securityAnswerRecord.answerHash
+            );
+  
+            return {
+              questionId,
+              success: isAnswerValid,
+              message: isAnswerValid
+                ? "Answer validated successfully."
+                : "Answer is incorrect.",
+            };
+          })
+        );
+  
+        // Check if all validations passed
+        const allValid = validationResults.every((result) => result.success);
+  
+        if (allValid) {
+          let resetToken = crypto.randomBytes(32).toString("hex") + checkUser.id;
+        
 
+        // Hash token before saving to DB
+        const hashedToken = crypto
+          .createHash("sha256")
+          .update(resetToken)
+          .digest("hex");
+        // Delete token if it exists in DB
+        
+        let token = await Token.findOne({
+          where: {userId: checkUser.id},
+        });
+
+        if (token) {
+          await token.destroy();
+        }
+
+        await Token.create({
+          userId: checkUser.id,
+          token: hashedToken,
+          createdAt: new Date(),
+          expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
+        });
+
+          res.status(StatusCodes.OK).json({
+            message: "All security answers verified successfully.",
+            success: true,
+            result:resetToken
+          });
+        } else {
+          res.status(StatusCodes.BAD_REQUEST).json({
+            message: "One or more security answers are incorrect.",
+            success: false,
+            
+          });
+        }
+      } catch (error: any) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: error?.message || "Something went wrong",
+        });
+      }
+    }
+  ),
   //   fetch  client security data
   fetchclientsecurity: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
