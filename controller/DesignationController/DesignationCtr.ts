@@ -111,7 +111,13 @@ const DesignationCtr = {
         }
         //check if designation exist
         
-        await checkDesigation.update({title: req.body.title});
+        const {title} = req.body;
+        const checkdesignation = await Designation.findOne({where: {title}});
+        if (checkdesignation) {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("Designation Already Exist");
+        }
+        await checkDesigation.update({title});
         return res
           .status(StatusCodes.OK)
           .json({message: "Update designation succesfully", success: true,result:checkDesigation});

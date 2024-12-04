@@ -7,10 +7,13 @@ import {
   notFoundHandler,
 } from "../../middleware/errorHandler";
 import bodyParser from "body-parser";
-
+const path = require('path');
 const createApp = (): Express => {
   const app = express();
   // Middleware
+  
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads/profileImages')));
   app.use(cors());
   app.use(morgan("dev"));
   app.use(bodyParser.json({ limit: "50mb" }));

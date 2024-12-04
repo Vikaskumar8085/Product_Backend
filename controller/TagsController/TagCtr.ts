@@ -28,7 +28,16 @@ const TagCtr = {
             .status(400)
             .json({error: "Tag_Name is required and must be a string."});
         }
-
+        //check if tag already exist
+        const checktags = await Tag.findOne({
+          where: {
+            [Op.or]: [{Tag_Name: Tag_Name}],
+          },
+        });
+        if (checktags) {
+          res.status(StatusCodes.CONFLICT);
+          throw new Error("Tag already exist");
+        }
         const additmes = await Tag.create({
           Tag_Name,
           Created_By: req.user.id,
@@ -106,18 +115,29 @@ const TagCtr = {
   updatetagctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        // check User existance
-        // const userExists: number | unknown = await User.findByPk(req.user);
-        // if (!userExists) {
-        //   res.status(404);
-        //   throw new Error("User Not Found Please Login !");
-        // }
+      
         const checktags = await Tag.findByPk(req.params.id);
+        //check Tag Name already exist
         if (!checktags) {
           res.status(StatusCodes.NOT_FOUND);
-          throw new Error("");
+          throw new Error("Tag not found");
         } else {
-          await checktags.update({Tag_Name: req.body.Tag_Name});
+          if (req.body.Tag_Name) {
+            //check if tag already exist
+            const checktagss = await Tag.findOne({
+              where: {
+                [Op.or]: [{Tag_Name: req.body.Tag_Name}],
+              },
+            });
+            if (checktagss) {
+              res.status(StatusCodes.CONFLICT);
+              throw new Error("Tag already exist");
+            }
+            else{
+              await checktags.update({Tag_Name: req.body.Tag_Name});
+            }
+          }
+          
         }
         return res.status(StatusCodes.OK).json({
           message: "tag updated successfully",

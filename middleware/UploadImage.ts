@@ -1,13 +1,21 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 // Storage Configuration for Profile Images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/profileImages/'); // Folder for profile images
+    const uploadPath = 'uploads/profileImages/';
+    // Check if directory exists, create if not
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath); // Folder for profile images
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
+    // Replace spaces with '%20' in the filename
+    const sanitizedFilename = file.originalname.replace(/\s/g, '%20');
+    cb(null, `${Date.now()}-${sanitizedFilename}`); // Unique filename with sanitized spaces
   },
 });
 
