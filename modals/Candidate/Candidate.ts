@@ -27,9 +27,10 @@ interface CandidateAttributes {
   designationId: number;
   country: string;
   city: string;
-  reason1: string;
-  reason2: string;
-  reason3: string;
+  reason1?: string;
+  reason2?: string;
+  reason3?: string;
+  lastReminderSent?: Date;
 
   
 }
@@ -66,6 +67,7 @@ class Candidate
   public reason1!: string;
   public reason2!: string;
   public reason3!: string;
+  public lastReminderSent!: Date;
 
 }
 
@@ -182,6 +184,12 @@ Candidate.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    lastReminderSent: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    
     
   },
   {

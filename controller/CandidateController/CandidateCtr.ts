@@ -26,7 +26,7 @@ const CandidateCtr = {
       // const transaction: Transaction = await sequelize.transaction();
       try {
         
-        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,reason1,reason2,reason3,tags,education} = req.body;
+        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,tags,education} = req.body;
        if (!name || !email || !contactNumber || !whatsappNumber) {
         res.status(StatusCodes.BAD_REQUEST);
         throw new Error("Bad Request");
@@ -47,7 +47,7 @@ const CandidateCtr = {
         throw new Error("Candidate already exists");
        }
 
-       const newCandidate = await Candidate.create({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,reason1,reason2,reason3,lastActive:new Date(),UserId:req.user.id});
+       const newCandidate = await Candidate.create({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,lastActive:new Date(),UserId:req.user.id});
 
        //now we need to store candidatetags and education
        if (tags) {
@@ -220,7 +220,7 @@ const CandidateCtr = {
         //   res.status(404);
         //   throw new Error("User Not Found Please Login !");
         // }
-        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,reason1,reason2,reason3,tags,education} = req.body;
+        const {name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,tags,education} = req.body;
         const checkDesignation = await Designation.findByPk(designationId);
         if (!checkDesignation) {
           res.status(StatusCodes.BAD_REQUEST);
@@ -231,7 +231,7 @@ const CandidateCtr = {
           res.status(StatusCodes.BAD_REQUEST);
           throw new Error("Candidate Not Found");
         }
-        await checkCandidate.update({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,reason1,reason2,reason3,lastActive:new Date(),UserId:req.user.id});
+        await checkCandidate.update({name,resumeTitle,contactNumber,whatsappNumber,email,workExp,currentCTC,currentLocation,state,currentEmployeer,postalAddress,preferredLocation,dob,remarks,designationId,country,city,lastActive:new Date(),UserId:req.user.id});
         //now we need to store candidatetags and education
         if (tags) {
           // Remove existing tags
