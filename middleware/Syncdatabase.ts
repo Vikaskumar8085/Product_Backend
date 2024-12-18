@@ -10,10 +10,10 @@ import Region from "../modals/Region/Region";
 import Tag from "../modals/Tag/Tag";
 import Token from "../modals/Token/Token";
 import User from "../modals/User/User";
-import ClientSecurity from "../modals/ClientSecurity/ClientSecurity";
 import ClientTags from "../modals/ClientTags";
 import SecurityQuestion from "../modals/SecurityQuestions/index";
 import UserSecurityAnswer from "../modals/UserSecurityAnswer/index";
+import ReasonAnswer from "../modals/ReasonAnswer/ReasonAnswer";
 async function syncdatabase() {
   // await ClientSecurity.sync();
   await User.sync({alter: true});
@@ -31,5 +31,6 @@ async function syncdatabase() {
   await ClientTags.sync();
   await SecurityQuestion.sync();
   await UserSecurityAnswer.sync();
+  await ReasonAnswer.sync();
 }
 export default syncdatabase;

@@ -3,19 +3,35 @@ import asyncHandler from "express-async-handler";
 import {CustomRequest} from "../../typeReq/customReq";
 import {StatusCodes} from "http-status-codes";
 import ReasonsForLeaving from "../../modals/ReasonForLeaving/ReasonForLeaving";
+import ReasonAnswer from "../../modals/ReasonAnswer/ReasonAnswer";
 const ReasonCtr = {
   //   create reason ctr
   createReasonctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
+        const {reason, option} = req.body;
+        const data = await option.map((item: any) => {
+          return item;
+        });
+        console.log("////", data);
+        console.log(reason, option);
         const additem = await ReasonsForLeaving.create({
-          reason: req.body.reason,
+          reason,
         });
 
         if (!additem) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Reason Not Found");
         }
+
+        const reasonAnswers = option.map((optionText: any) => ({
+          reason_id: additem.id, // Associate the reason ID to the options
+          Reason_answer: optionText,
+        }));
+
+        // Bulk create the ReasonAnswer entries
+        await ReasonAnswer.bulkCreate(reasonAnswers);
+
         return res
           .status(StatusCodes.OK)
           .json({message: "Reason Created", success: true, result: additem});
@@ -74,9 +90,11 @@ const ReasonCtr = {
           throw new Error("Reason not found ");
         }
         await checkitems.update({reason: req.body.reason});
-        return res
-          .status(StatusCodes.OK)
-          .json({message: "updated successfully", success: true, result: checkitems});
+        return res.status(StatusCodes.OK).json({
+          message: "updated successfully",
+          success: true,
+          result: checkitems,
+        });
       } catch (error: any) {
         throw new Error(error?.message);
       }

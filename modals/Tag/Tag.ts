@@ -1,6 +1,6 @@
 import {DataTypes, Model, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
-import { ref } from "joi";
+import {ref} from "joi";
 import User from "../User/User";
 interface TagAttributes {
   id: number;
@@ -37,9 +37,7 @@ Tag.init(
         model: User,
         key: "id",
       },
-      
     },
-    
   },
   {
     tableName: "Tag",
@@ -48,7 +46,7 @@ Tag.init(
   }
 );
 
-//write associations here hasone and belongs 
+//write associations here hasone and belongs
 Tag.belongsTo(User, {
   foreignKey: "Created_By",
   as: "user",
@@ -57,7 +55,5 @@ User.hasOne(Tag, {
   foreignKey: "Created_By",
   as: "tag",
 });
-
-
 
 export default Tag;

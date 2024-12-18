@@ -9,6 +9,7 @@ import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
 import SecurityQuestion from "../../modals/SecurityQuestions/index";
 import Token from "../../modals/Token/Token";
 import crypto from "crypto";
+import Client from "../../modals/Client/Client";
 
 const clientsecurityctr = {
   //  add clien security data
@@ -21,24 +22,31 @@ const clientsecurityctr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("User Not Found");
         }
-  
-        const { questionsAndAnswers } = req.body;
-        
-        if (!Array.isArray(questionsAndAnswers) || questionsAndAnswers.length === 0) {
+
+        const {questionsAndAnswers} = req.body;
+
+        if (
+          !Array.isArray(questionsAndAnswers) ||
+          questionsAndAnswers.length === 0
+        ) {
           res.status(StatusCodes.BAD_REQUEST);
-          throw new Error("Invalid input. Expected an array of question and answer pairs.");
+          throw new Error(
+            "Invalid input. Expected an array of question and answer pairs."
+          );
         }
-  
-        for (const { questionId, answer } of questionsAndAnswers) {
+
+        for (const {questionId, answer} of questionsAndAnswers) {
           // Validate that the question exists in the SecurityQuestion table
           const securityQuestion = await SecurityQuestion.findByPk(questionId);
           if (!securityQuestion) {
-            throw new Error(`Security question with ID ${questionId} not found`);
+            throw new Error(
+              `Security question with ID ${questionId} not found`
+            );
           }
-  
+
           // Hash the answer using bcrypt
           const hashedAnswer = await bcrypt.hash(answer, 10);
-  
+
           // Check if the user already has an answer for this question
           const existingAnswer = await UserSecurityAnswer.findOne({
             where: {
@@ -46,7 +54,7 @@ const clientsecurityctr = {
               questionId,
             },
           });
-  
+
           if (existingAnswer) {
             // If an answer exists, update it
             existingAnswer.answerHash = hashedAnswer;
@@ -60,7 +68,7 @@ const clientsecurityctr = {
             });
           }
         }
-  
+
         // Send success response
         res.status(StatusCodes.OK).json({
           message: "Security questions and answers set successfully",
@@ -73,13 +81,13 @@ const clientsecurityctr = {
       }
     }
   ),
-  
+
   checkSecurityQueAnsCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
         // Ensure the user exists
         const {Email} = req.body;
-        console.log(Email,"email called");
+        console.log(Email, "email called");
         const checkUser = await User.findOne({
           where: {Email},
         });
@@ -92,10 +100,10 @@ const clientsecurityctr = {
           where: {userId: checkUser.id},
           include: {
             model: SecurityQuestion,
-            as: 'securityQuestion',
+            as: "securityQuestion",
           },
           //exclude everything except id
-          attributes: ['id'],
+          attributes: ["id"],
         });
         if (!Allquestions || Allquestions.length === 0) {
           res.status(StatusCodes.NOT_FOUND);
@@ -117,99 +125,100 @@ const clientsecurityctr = {
   verifySecurityQueAnsCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const { Email, answers } = req.body; // `answers` contains questionId and answer pairs
+        const {Email, answers} = req.body; // `answers` contains questionId and answer pairs
         console.log(Email, "email called");
-  
+
         // Check if the user exists
         const checkUser = await User.findOne({
-          where: { Email },
+          where: {Email},
         });
         if (!checkUser) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("User Not Found");
         }
-  
+
         const userId = checkUser.id;
-  
+
         // Iterate over answers and validate
         const validationResults = await Promise.all(
-          answers.map(async (answerObj: { questionId: number; answer: string }) => {
-            const { questionId, answer } = answerObj;
-  
-            // Fetch the security answer record for the user and question
-            const securityAnswerRecord = await UserSecurityAnswer.findOne({
-              where: { userId, questionId },
-              include: [
-                {
-                  model: SecurityQuestion,
-                  as: "securityQuestion",
-                },
-              ],
-            });
-  
-            if (!securityAnswerRecord) {
+          answers.map(
+            async (answerObj: {questionId: number; answer: string}) => {
+              const {questionId, answer} = answerObj;
+
+              // Fetch the security answer record for the user and question
+              const securityAnswerRecord = await UserSecurityAnswer.findOne({
+                where: {userId, questionId},
+                include: [
+                  {
+                    model: SecurityQuestion,
+                    as: "securityQuestion",
+                  },
+                ],
+              });
+
+              if (!securityAnswerRecord) {
+                return {
+                  questionId,
+                  success: false,
+                  message: "Security question not found for this user.",
+                };
+              }
+
+              // Compare provided answer hash with the stored hash
+              const isAnswerValid = await bcrypt.compare(
+                answer,
+                securityAnswerRecord.answerHash
+              );
+
               return {
                 questionId,
-                success: false,
-                message: "Security question not found for this user.",
+                success: isAnswerValid,
+                message: isAnswerValid
+                  ? "Answer validated successfully."
+                  : "Answer is incorrect.",
               };
             }
-  
-            // Compare provided answer hash with the stored hash
-            const isAnswerValid = await bcrypt.compare(
-              answer,
-              securityAnswerRecord.answerHash
-            );
-  
-            return {
-              questionId,
-              success: isAnswerValid,
-              message: isAnswerValid
-                ? "Answer validated successfully."
-                : "Answer is incorrect.",
-            };
-          })
+          )
         );
-  
+
         // Check if all validations passed
         const allValid = validationResults.every((result) => result.success);
-  
+
         if (allValid) {
-          let resetToken = crypto.randomBytes(32).toString("hex") + checkUser.id;
-        
+          let resetToken =
+            crypto.randomBytes(32).toString("hex") + checkUser.id;
 
-        // Hash token before saving to DB
-        const hashedToken = crypto
-          .createHash("sha256")
-          .update(resetToken)
-          .digest("hex");
-        // Delete token if it exists in DB
-        
-        let token = await Token.findOne({
-          where: {userId: checkUser.id},
-        });
+          // Hash token before saving to DB
+          const hashedToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+          // Delete token if it exists in DB
 
-        if (token) {
-          await token.destroy();
-        }
+          let token = await Token.findOne({
+            where: {userId: checkUser.id},
+          });
 
-        await Token.create({
-          userId: checkUser.id,
-          token: hashedToken,
-          createdAt: new Date(),
-          expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
-        });
+          if (token) {
+            await token.destroy();
+          }
+
+          await Token.create({
+            userId: checkUser.id,
+            token: hashedToken,
+            createdAt: new Date(),
+            expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
+          });
 
           res.status(StatusCodes.OK).json({
             message: "All security answers verified successfully.",
             success: true,
-            result:resetToken
+            result: resetToken,
           });
         } else {
           res.status(StatusCodes.BAD_REQUEST).json({
             message: "One or more security answers are incorrect.",
             success: false,
-            
           });
         }
       } catch (error: any) {
@@ -292,6 +301,32 @@ const clientsecurityctr = {
           message: "Client Security entry updated successfully.",
           success: true,
           result: updateSecurity,
+        });
+      } catch (error: any) {
+        throw new Error(error?.message);
+      }
+    }
+  ),
+
+  // total client
+  totalclientCount: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        const checkUser = await User.findByPk(req.user.id);
+        if (!checkUser) {
+          res.status(StatusCodes.NOT_FOUND);
+          throw new Error("User Not Found");
+        }
+
+        const fetchcountclient = await Client.findAndCountAll();
+        if (!fetchcountclient) {
+          res.status(400);
+          throw new Error("bad Request");
+        }
+        return res.status(200).json({
+          message: "fetch count successfully",
+          result: fetchcountclient,
+          success: true,
         });
       } catch (error: any) {
         throw new Error(error?.message);

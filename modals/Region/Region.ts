@@ -5,7 +5,6 @@ interface RegionAttributes {
   id: number;
   Name: string;
 }
-
 interface RegionCreationAttributes extends Optional<RegionAttributes, "id"> {}
 
 class Region

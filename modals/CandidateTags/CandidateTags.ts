@@ -1,20 +1,14 @@
-import { Model, DataTypes, Optional } from "sequelize";
+import {Model, DataTypes, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
 import Candidate from "../Candidate/Candidate";
 import Tag from "../Tag/Tag";
 
-
-
 interface CandidateAttributes {
   candidateId: number;
   tagId: number;
-
-  
 }
-
 interface CandidateCreationAttributes
   extends Optional<CandidateAttributes, "candidateId"> {}
-
 class CandidateTags
   extends Model<CandidateAttributes, CandidateCreationAttributes>
   implements CandidateAttributes
@@ -29,19 +23,19 @@ CandidateTags.init(
       type: DataTypes.INTEGER,
       references: {
         model: Candidate,
-        key: 'id',
+        key: "id",
       },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
     tagId: {
       type: DataTypes.INTEGER,
       references: {
         model: Tag,
-        key: 'id',
+        key: "id",
       },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
   },
   {
@@ -55,12 +49,12 @@ Candidate.belongsToMany(Tag, {
   through: CandidateTags,
   foreignKey: "candidateId",
   otherKey: "tagId",
-  as: "tags"
+  as: "tags",
 });
 Tag.belongsToMany(Candidate, {
   through: CandidateTags,
   foreignKey: "tagId",
   otherKey: "candidateId",
-  as: "candidates"
+  as: "candidates",
 });
 export default CandidateTags;
