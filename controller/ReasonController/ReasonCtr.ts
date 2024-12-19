@@ -40,13 +40,14 @@ const ReasonCtr = {
       }
     }
   ),
-
   //fetch reason Ctr
-
   fetchReasonCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const fetchitmes = await ReasonsForLeaving.findAll();
+        const fetchitmes = await ReasonsForLeaving.findAll({
+          include: {model: ReasonAnswer, attributes: ["Reason_answer"]},
+        });
+
         if (!fetchitmes) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Reason not found");
@@ -59,7 +60,6 @@ const ReasonCtr = {
       }
     }
   ),
-
   //   remove reson ctr
   removeReasonCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
@@ -79,7 +79,6 @@ const ReasonCtr = {
       }
     }
   ),
-
   //   edit reason ctr
   updateReasonCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {

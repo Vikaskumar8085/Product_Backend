@@ -1,5 +1,6 @@
 import {Model, DataTypes, Optional} from "sequelize";
 import sequelize from "../../dbconfig/dbconfig";
+import ReasonsForLeaving from "../ReasonForLeaving/ReasonForLeaving";
 
 interface ReasonAnswerAttributes {
   id: number;
@@ -42,5 +43,8 @@ ReasonAnswer.init(
     timestamps: true,
   }
 );
+
+ReasonsForLeaving.hasOne(ReasonAnswer, {foreignKey: "reason_id"});
+ReasonAnswer.belongsTo(ReasonsForLeaving, {foreignKey: "reason_id"});
 
 export default ReasonAnswer;

@@ -14,6 +14,7 @@ import ClientTags from "../modals/ClientTags";
 import SecurityQuestion from "../modals/SecurityQuestions/index";
 import UserSecurityAnswer from "../modals/UserSecurityAnswer/index";
 import ReasonAnswer from "../modals/ReasonAnswer/ReasonAnswer";
+import ReasonSaveAnswer from "../modals/ReasonSaveAnswer/ReasonSaveAnswer";
 async function syncdatabase() {
   // await ClientSecurity.sync();
   await User.sync({alter: true});
@@ -32,5 +33,6 @@ async function syncdatabase() {
   await SecurityQuestion.sync();
   await UserSecurityAnswer.sync();
   await ReasonAnswer.sync();
+  await ReasonSaveAnswer.sync();
 }
 export default syncdatabase;
