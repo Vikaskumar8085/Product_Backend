@@ -44,7 +44,7 @@ ReasonAnswer.init(
   }
 );
 
-ReasonsForLeaving.hasOne(ReasonAnswer, {foreignKey: "reason_id"});
+ReasonsForLeaving.hasMany(ReasonAnswer, {foreignKey: "reason_id"});
 ReasonAnswer.belongsTo(ReasonsForLeaving, {foreignKey: "reason_id"});
 
 export default ReasonAnswer;
