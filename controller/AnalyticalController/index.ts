@@ -9,7 +9,8 @@ import Tag from "../../modals/Tag/Tag";
 import Client from "../../modals/Client/Client";
 import { Op } from "sequelize";
 import { CustomRequest } from "../../typeReq/customReq";
-
+import CandidateTags from "../../modals/CandidateTags/CandidateTags";
+import { QueryTypes } from "sequelize";
 const AnalyticalCtr = {
   // Candidate Distribution by Designation
   candidateDistribution: asyncHandler(async (req: CustomRequest, res: Response) => {
@@ -37,27 +38,61 @@ const AnalyticalCtr = {
 
   // Work Experience Analysis
   workExperienceAnalysis: asyncHandler(async (req, res: Response) => {
-    const experienceDistribution = await Candidate.findAll({
-      attributes: [
-        [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 0 AND 1 THEN 1 ELSE 0 END")), '0-1 years'],
-        [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 1 AND 3 THEN 1 ELSE 0 END")), '1-3 years'],
-        [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
-        [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 THEN 1 ELSE 0 END")), '5+ years'],
-      ],
+    const experienceDistribution: any[] = await Candidate.findAll({
+        attributes: [
+            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 0 AND 1 THEN 1 ELSE 0 END")), '0-1 years'],
+            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 1 AND 3 THEN 1 ELSE 0 END")), '1-3 years'],
+            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
+            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
+            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
+        ],
+        raw: true // This will return the result as a plain object
     });
-    res.json(experienceDistribution);
-  }),
+
+    // Transform the result into the desired format
+    const formattedResponse = [
+        { experience_range: "0-1 years", count: experienceDistribution[0]['0-1 years'] || 0 },
+        { experience_range: "1-3 years", count: experienceDistribution[0]['1-3 years'] || 0 },
+        { experience_range: "3-5 years", count: experienceDistribution[0]['3-5 years'] || 0 },
+        { experience_range: "5-10 years", count: experienceDistribution[0]['5-10 years'] || 0 },
+        { experience_range: "10+ years", count: experienceDistribution[0]['10+ years'] || 0 }
+    ];
+
+    res.json(formattedResponse);
+}),
 
   // Current CTC Analysis
-  currentCTCAnalysis: asyncHandler(async (req, res: Response) => {
+  currentCTCAnalysis: asyncHandler(async (req: CustomRequest, res: Response) => {
     const ctcDistribution = await Candidate.findAll({
       attributes: [
-        [sequelize.fn('MIN', sequelize.col('currentCTC')), 'minCTC'],
-        [sequelize.fn('MAX', sequelize.col('currentCTC')), 'maxCTC'],
-        [sequelize.fn('AVG', sequelize.col('currentCTC')), 'avgCTC'],
+        [
+          sequelize.fn(
+            'MIN',
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+          ),
+          'minCTC',
+        ],
+        [
+          sequelize.fn(
+            'MAX',
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+          ),
+          'maxCTC',
+        ],
+        [
+          sequelize.fn(
+            'AVG',
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+          ),
+          'avgCTC',
+        ],
       ],
     });
-    res.json(ctcDistribution);
+
+    res.status(200).json({
+      success: true,
+      data: ctcDistribution,
+    });
   }),
 
   // Geographical Distribution of Candidates
@@ -71,14 +106,19 @@ const AnalyticalCtr = {
 
   // Education Level Analysis
   educationLevelAnalysis: asyncHandler(async (req, res: Response) => {
-    const educationDistribution = await Education.findAll({
-      attributes: [
-        'ugCourse',
-        'pgCourse',
-        'postPgCourse',
-        [sequelize.fn('COUNT', sequelize.col('candidateId')), 'count'],
-      ],
-      group: ['ugCourse', 'pgCourse', 'postPgCourse'],
+    const educationDistribution = await Candidate.findAll({
+        include: [
+            {
+            model: Education,
+            as: 'education',
+            attributes: [],
+            },
+        ],
+        attributes: [
+            [sequelize.fn('COUNT', sequelize.col('education.ugCourse')), 'ugCount'],
+            [sequelize.fn('COUNT', sequelize.col('education.pgCourse')), 'pgCount'],
+            [sequelize.fn('COUNT', sequelize.col('education.postPgCourse')), 'postPgCount'],
+        ],
     });
     res.json(educationDistribution);
   }),
@@ -104,17 +144,16 @@ const AnalyticalCtr = {
 
   // Tag Analysis for Candidates
   tagAnalysis: asyncHandler(async (req, res: Response) => {
-    const tagDistribution = await Candidate.findAll({
-      include: [{
-        model: Tag,
-        attributes: ['name'],
-        through: {
-          attributes: [],
-        },
-      }],
-      attributes: [[sequelize.fn('COUNT', sequelize.col('tags.id')), 'count']],
-      group: ['tags.id'],
+    const tagDistribution = await sequelize.query(`
+      SELECT t.Tag_Name as tag, COUNT(ct.tagId) as count
+      FROM Tag t
+      INNER JOIN candidate_tags ct ON t.id = ct.tagId
+      GROUP BY t.id, t.Tag_Name
+    `, {
+      type: QueryTypes.SELECT,
+      raw: true
     });
+  
     res.json(tagDistribution);
   }),
 
@@ -132,15 +171,8 @@ const AnalyticalCtr = {
     res.json(ageDistribution);
   }),
 
-  // Client Distribution by Region (Assuming you have a Client model)
-  clientDistribution: asyncHandler(async (req, res: Response) => {
-    // This is a placeholder. You need to implement the Client model and its relationships.
-    const clientDistribution = await Client.findAll({
-      attributes: ['region', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      group: ['region'],
-    });
-    res.json(clientDistribution);
-  }),
+  
+ 
 };
 
 export default AnalyticalCtr;

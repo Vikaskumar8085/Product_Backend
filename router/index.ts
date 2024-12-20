@@ -11,6 +11,7 @@ import degreeRouter from "./Admin/DegreeRouter";
 import clientsecurityRouter from "./Admin/ClientSecurityRouter";
 import securityRouter from "./Admin/Security/index";
 import ReasonSaveAnswerRouter from "./Admin/ReasonSaveAnswerRouter";
+import analyticalRouter from "./Admin/AnalyticalRouter";
 
 const indexRouter = express.Router();
 indexRouter.use("/user", userRouter);
@@ -25,5 +26,5 @@ indexRouter.use("/degrees", degreeRouter);
 indexRouter.use("/client-security", clientsecurityRouter);
 indexRouter.use("/security", securityRouter);
 indexRouter.use("/v1", ReasonSaveAnswerRouter);
-
+indexRouter.use("/analytical", analyticalRouter);
 export default indexRouter;
