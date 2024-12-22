@@ -23,7 +23,7 @@ const ReasonCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Reason Not Found");
         }
-
+        5;
         const reasonAnswers = option.map((optionText: any) => ({
           reason_id: additem.id, // Associate the reason ID to the options
           Reason_answer: optionText,
@@ -44,17 +44,30 @@ const ReasonCtr = {
   fetchReasonCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const fetchitmes = await ReasonsForLeaving.findAll({
-          include: {model: ReasonAnswer, attributes: ["Reason_answer"]},
+        const fetchItems = await ReasonsForLeaving.findAll({
+          include: {
+            model: ReasonAnswer,
+            attributes: ["id", "Reason_answer"],
+          },
+          attributes: ["id", "reason"], // Fetch only required attributes
         });
 
-        if (!fetchitmes) {
+        if (!fetchItems) {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Reason not found");
         }
+        // const formattedResult = fetchItems.map((item) => ({
+        //   id: item.id,
+        //   reason: item.reason,
+        //   reasonAnswers:
+        //     item.ReasonAnswers?.map(
+        //       (answer: {Reason_answer: any}) => answer.Reason_answer
+        //     ) || [],
+        // }));
+
         return res
           .status(StatusCodes.OK)
-          .json({message: "", success: true, result: fetchitmes});
+          .json({message: "", success: true, result: fetchItems});
       } catch (error: any) {
         throw new Error(error?.message);
       }

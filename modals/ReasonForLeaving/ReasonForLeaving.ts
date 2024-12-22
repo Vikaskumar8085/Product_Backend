@@ -14,6 +14,7 @@ class ReasonsForLeaving
   extends Model<ReasonAttributes, ReasonCreateAttributes>
   implements ReasonAttributes
 {
+  [x: string]: any;
   public id!: number;
   public reason!: string;
 }

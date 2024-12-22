@@ -26,7 +26,7 @@ const sendExitInterviewMessage = async (): Promise<void> => {
       // Call the WhatsApp API to send a message
       console.log("Sending message to candidate:", candidate.whatsappNumber);
       const user = {
-        url: `process.env.FRONTEND_URL/${candidate.id}`,
+        url: `http://localhost:3000/reason-leaving-job/${candidate.id}`,
         phone: candidate.whatsappNumber,
       };
       await sendMessage(user);
