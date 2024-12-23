@@ -38,10 +38,10 @@ db();
 //   }
 // });
 
-cron.schedule("* * * * *", () => {
-  console.log("running a task every minute");
-  sendExitInterviewMessage();
-});
+// cron.schedule("* * * * *", () => {
+//   console.log("running a task every minute");
+//   sendExitInterviewMessage();
+// });
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

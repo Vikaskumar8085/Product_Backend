@@ -31,10 +31,18 @@ const ReasonCtr = {
 
         // Bulk create the ReasonAnswer entries
         await ReasonAnswer.bulkCreate(reasonAnswers);
+        //find reason with answer
+        const reasonWithAnswer = await ReasonsForLeaving.findOne({
+          where: {id: additem.id},
+          include: {
+            model: ReasonAnswer,
+            attributes: ["id", "Reason_answer"],
+          },
+        });
 
         return res
           .status(StatusCodes.OK)
-          .json({message: "Reason Created", success: true, result: additem});
+          .json({message: "Reason Created", success: true, result:reasonWithAnswer});
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -102,10 +110,18 @@ const ReasonCtr = {
           throw new Error("Reason not found ");
         }
         await checkitems.update({reason: req.body.reason});
+        //find reason with answer
+        const reasonWithAnswer = await ReasonsForLeaving.findOne({
+          where: {id: checkitems.id},
+          include: {
+            model: ReasonAnswer,
+            attributes: ["id", "Reason_answer"],
+          },
+        });
         return res.status(StatusCodes.OK).json({
           message: "updated successfully",
           success: true,
-          result: checkitems,
+          result: reasonWithAnswer,
         });
       } catch (error: any) {
         throw new Error(error?.message);

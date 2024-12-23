@@ -27,7 +27,7 @@ async function syncdatabase() {
   await CandidateTags.sync();
   await CandidateReasons.sync();
   await Education.sync();
-  await Client.sync();
+  await Client.sync({alter: true});
   await Degree.sync();
   await ClientTags.sync();
   await SecurityQuestion.sync();
