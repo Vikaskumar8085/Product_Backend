@@ -10,7 +10,14 @@ import Client from "../../modals/Client/Client";
 import { Op } from "sequelize";
 import { CustomRequest } from "../../typeReq/customReq";
 import CandidateTags from "../../modals/CandidateTags/CandidateTags";
+import ClientTags from "../../modals/ClientTags";
+import User from "../../modals/User/User";
 import { QueryTypes } from "sequelize";
+interface ExperienceDistribution {
+  designationId: number;
+  count: number;
+}
+
 const AnalyticalCtr = {
   // Candidate Distribution by Designation
   candidateDistribution: asyncHandler(async (req: CustomRequest, res: Response) => {
@@ -27,7 +34,7 @@ const AnalyticalCtr = {
           attributes: ['title'],
         },
       ],
-    });
+    }) as unknown as ExperienceDistribution[];
 
     res.status(200).json({
       success: true,
@@ -37,28 +44,142 @@ const AnalyticalCtr = {
 
 
   // Work Experience Analysis
-  workExperienceAnalysis: asyncHandler(async (req, res: Response) => {
-    const experienceDistribution: any[] = await Candidate.findAll({
-        attributes: [
-            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 0 AND 1 THEN 1 ELSE 0 END")), '0-1 years'],
-            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 1 AND 3 THEN 1 ELSE 0 END")), '1-3 years'],
-            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
-            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
-            [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
-        ],
-        raw: true // This will return the result as a plain object
-    });
+  workExperienceAnalysis: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
 
-    // Transform the result into the desired format
-    const formattedResponse = [
-        { experience_range: "0-1 years", count: experienceDistribution[0]['0-1 years'] || 0 },
-        { experience_range: "1-3 years", count: experienceDistribution[0]['1-3 years'] || 0 },
-        { experience_range: "3-5 years", count: experienceDistribution[0]['3-5 years'] || 0 },
-        { experience_range: "5-10 years", count: experienceDistribution[0]['5-10 years'] || 0 },
-        { experience_range: "10+ years", count: experienceDistribution[0]['10+ years'] || 0 }
-    ];
+      const user = await User.findOne({
 
-    res.json(formattedResponse);
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          return res.status(404).json({ success: false, message: 'User  not found' });
+
+      }
+
+
+      interface ExperienceDistribution {
+        '0-1 years': number;
+        '1-3 years': number;
+        '3-5 years': number;
+        '5-10 years': number;
+        '10+ years': number;
+      }
+
+      let experienceDistribution: any[];
+
+
+      if (user.Type === 'superadmin') {
+
+          experienceDistribution = await Candidate.findAll({
+
+              attributes: [
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 0 AND 1 THEN 1 ELSE 0 END")), '0-1 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 1 AND 3 THEN 1 ELSE 0 END")), '1-3 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
+
+              ],
+
+              raw: true // This will return the result as a plain object
+
+          });
+
+      } else {
+
+          const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+          if (!client) {
+
+              return res.status(404).json({ success: false, message: "Client not found" });
+
+          }
+
+
+          const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+          const tagIds = clientTags.map((tag) => tag.tagId);
+
+
+          experienceDistribution = await Candidate.findAll({
+
+              attributes: [
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 0 AND 1 THEN 1 ELSE 0 END")), '0-1 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 1 AND 3 THEN 1 ELSE 0 END")), '1-3 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
+
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
+
+              ],
+
+              where: {
+
+                  [Op.or]: {
+
+                      '$tags.id$': tagIds, // Ensure candidates are filtered by the client's tags
+
+                  },
+
+              },
+
+              include: [{
+
+                  model: Tag,
+
+                  as: "tags",
+
+                  required: true, // Ensure that only candidates with tags are included
+
+              }],
+
+              raw: true // This will return the result as a plain object
+
+          });
+
+      }
+
+
+      // Transform the result into the desired format
+
+      const formattedResponse = [
+
+          { experience_range: "0-1 years", count: experienceDistribution[0]['0-1 years'] || 0 },
+
+          { experience_range: "1-3 years", count: experienceDistribution[0]['1-3 years'] || 0 },
+
+          { experience_range: "3-5 years", count: experienceDistribution[0]['3-5 years'] || 0 },
+
+          { experience_range: "5-10 years", count: experienceDistribution[0]['5-10 years'] || 0 },
+
+          { experience_range: "10+ years", count: experienceDistribution[0]['10+ years'] || 0 }
+
+      ];
+
+
+      return res.json({ success: true, data: formattedResponse });
+
+  } catch (error: any) {
+
+      return res.status(500).json({ success: false, message: error.message });
+
+  }
 }),
 
   // Current CTC Analysis
@@ -87,22 +208,111 @@ const AnalyticalCtr = {
           'avgCTC',
         ],
       ],
+      where: {
+        currentCTC: {
+          [Op.not]: '',
+          [Op.ne]: '',
+          [Op.notLike]: '%null%'
+        }
+      }
     });
-
+  
     res.status(200).json({
       success: true,
       data: ctcDistribution,
     });
   }),
 
-  // Geographical Distribution of Candidates
-  geographicalDistribution: asyncHandler(async (req, res: Response) => {
-    const geoDistribution = await Candidate.findAll({
-      attributes: ['currentLocation', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      group: ['currentLocation'],
-    });
-    res.json(geoDistribution);
-  }),
+ 
+  geographicalDistribution: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+
+      const user = await User.findOne({
+
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          return res.status(404).json({ success: false, message: 'User  not found' });
+
+      }
+
+
+      let geoDistribution;
+
+
+      if (user.Type === 'superadmin') {
+
+          geoDistribution = await Candidate.findAll({
+
+              attributes: ['city', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
+
+              group: ['city'],
+
+          });
+
+      } else {
+
+          const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+          if (!client) {
+
+              return res.status(404).json({ success: false, message: "Client not found" });
+
+          }
+
+
+          const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+          const tagIds = clientTags.map((tag) => tag.tagId);
+
+
+          geoDistribution = await Candidate.findAll({
+
+              attributes: ['city', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
+
+              group: ['city'],
+
+              include: [{
+
+                  model: Tag,
+
+                  as: "tags",
+                  attributes: [],
+                  where: {
+
+                      [Op.or]: {
+
+                          id: tagIds,
+
+                          Created_By: req.user.id,
+
+                      },
+
+                  },
+
+              }],
+
+          });
+
+      }
+
+
+      res.status(200).json({ success: true, data: geoDistribution });
+
+  } catch (error: any) {
+
+      res.status(500).json({ success: false, message: error.message });
+
+  }
+  }
+  ),
 
   // Education Level Analysis
   educationLevelAnalysis: asyncHandler(async (req, res: Response) => {

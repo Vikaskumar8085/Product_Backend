@@ -9,12 +9,20 @@ import path from "path";
 import {Op, or} from "sequelize";
 import {format} from "fast-csv";
 import csv from "csv-parser";
+import ClientTags from "../../modals/ClientTags";
 
 const TagCtr = {
   // create tags
   createtagCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
+        const user = await User.findOne({
+          where: {id: req.user.id},
+          attributes: ["id", "Type"],
+        });
+        if (!user) {
+          return res.status(404).json({success: false, message: "User not found"});
+        }
         const {Tag_Name} = req.body;
 
         // check User existance
@@ -46,6 +54,14 @@ const TagCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("tag not found");
         }
+        if (additmes && user.Type === "client"){
+          await ClientTags.create({
+            ClientId: req.user.id,
+            tagId: additmes.id,
+        }
+        );
+        }
+        
         return res.status(StatusCodes.CREATED).json({
           message: "Tag created successfully",
           success: true,

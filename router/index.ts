@@ -12,6 +12,7 @@ import clientsecurityRouter from "./Admin/ClientSecurityRouter";
 import securityRouter from "./Admin/Security/index";
 import ReasonSaveAnswerRouter from "./Admin/ReasonSaveAnswerRouter";
 import analyticalRouter from "./Admin/AnalyticalRouter";
+import dashboardRouter from "./Admin/DashboardRouter";
 
 const indexRouter = express.Router();
 indexRouter.use("/user", userRouter);
@@ -27,4 +28,5 @@ indexRouter.use("/client-security", clientsecurityRouter);
 indexRouter.use("/security", securityRouter);
 indexRouter.use("/v1", ReasonSaveAnswerRouter);
 indexRouter.use("/analytical", analyticalRouter);
+indexRouter.use("/dashboard", dashboardRouter);
 export default indexRouter;

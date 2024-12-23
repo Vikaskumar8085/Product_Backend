@@ -4,7 +4,7 @@ import { verify } from "crypto";
 import verifyToken from "../../../middleware/auth/Verifytoken";
 let ClientRouter = express.Router();
 
-ClientRouter.post("/create-client", ClientCtr.createclientctr);
+ClientRouter.post("/create-client",verifyToken, ClientCtr.createclientctr);
 ClientRouter.get("/fetch-client", ClientCtr.fetchclientctr);
 ClientRouter.delete("/remove-client/:id", ClientCtr.removeclientctr);
 ClientRouter.put("/edit-client/:id", ClientCtr.editclientctr);
