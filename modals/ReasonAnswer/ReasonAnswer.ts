@@ -18,6 +18,7 @@ class ReasonAnswer
   public id!: number;
   public Reason_answer!: string;
   public reason_id!: number;
+  answer: any;
 }
 
 ReasonAnswer.init(

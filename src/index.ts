@@ -27,16 +27,15 @@ const db = async () => {
 db();
 
 // Schedule the job to run every day at 13:35 (1:35 PM)
-// cron.schedule("43 * * * *", async () => {
-//   console.log("Running scheduled reminder job...");
+cron.schedule("30 18 * * *", async () => {
+  console.log("Running scheduled reminder job...");
 
-//   try {
-//     // Call the exit interview message sending function
-//  // Now it can be called without req, res
-//   } catch (error) {
-//     console.error("Error during reminder job execution:", error);
-//   }
-// });
+  try {
+    sendExitInterviewMessage();
+  } catch (error) {
+    console.error("Error during reminder job execution:", error);
+  }
+});
 
 // cron.schedule("* * * * *", () => {
 //   console.log("running a task every minute");

@@ -1,5 +1,5 @@
 import Candidate from "../modals/Candidate/Candidate";
-import CandidateReasons from "../modals/CandidateReasons/CandidateReasons";
+// import CandidateReasons from "../modals/CandidateReasons/CandidateReasons";
 import CandidateTags from "../modals/CandidateTags/CandidateTags";
 import Client from "../modals/Client/Client";
 import Degree from "../modals/DegreeProgram/Degree";
@@ -17,7 +17,7 @@ import ReasonAnswer from "../modals/ReasonAnswer/ReasonAnswer";
 import ReasonSaveAnswer from "../modals/ReasonSaveAnswer/ReasonSaveAnswer";
 async function syncdatabase() {
   // await ClientSecurity.sync();
-  await User.sync({alter: true});
+  await User.sync();
   await Token.sync();
   await Tag.sync();
   await ReasonsForLeaving.sync();
@@ -25,9 +25,9 @@ async function syncdatabase() {
   await Region.sync();
   await Candidate.sync();
   await CandidateTags.sync();
-  await CandidateReasons.sync();
+  // await CandidateReasons.sync();
   await Education.sync();
-  await Client.sync({alter: true});
+  await Client.sync();
   await Degree.sync();
   await ClientTags.sync();
   await SecurityQuestion.sync();
