@@ -13,9 +13,9 @@ const sendExitInterviewMessage = async (): Promise<void> => {
     const candidates = await Candidate.findAll({
       where: {
         [Op.and]: [
-          {
-            [Op.or]: [{reason1: ""}, {reason2: ""}, {reason3: ""}],
-          },
+          // {
+          //   [Op.or]: [{reason1: ""}, {reason2: ""}, {reason3: ""}],
+          // },
           {lastReminderSent: {[Op.lt]: tenDaysAgo}},
         ],
       },
@@ -26,6 +26,7 @@ const sendExitInterviewMessage = async (): Promise<void> => {
       // Call the WhatsApp API to send a message
       console.log("Sending message to candidate:", candidate.whatsappNumber);
       const user = {
+        name: candidate.name,
         url: `http://localhost:3000/reason-leaving-job/${candidate.id}`,
         phone: candidate.whatsappNumber,
       };

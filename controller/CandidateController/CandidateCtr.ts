@@ -13,12 +13,15 @@ import { Transaction } from 'sequelize';
 import  sequelize  from '../../dbconfig/dbconfig';
 import CreateCandidateRequest from '../../typeReq/CandidateType';
 import Education from '../../modals/Eduction/Education';
-import CandidateReasons from '../../modals/CandidateReasons/CandidateReasons';
+// import CandidateReasons from '../../modals/CandidateReasons/CandidateReasons';
 import CandidateTags from '../../modals/CandidateTags/CandidateTags';
 import Tag from '../../modals/Tag/Tag';
 import User from '../../modals/User/User';
 import Client from '../../modals/Client/Client';
 import ClientTags from "../../modals/ClientTags";
+import ReasonSaveAnswer from "../../modals/ReasonSaveAnswer/ReasonSaveAnswer";
+import ReasonsForLeaving from "../../modals/ReasonForLeaving/ReasonForLeaving";
+import ReasonAnswer from "../../modals/ReasonAnswer/ReasonAnswer";
 const CandidateCtr = {
   // create Candidate ctr
   createCandidatectr: asyncHandler(
@@ -155,16 +158,45 @@ const CandidateCtr = {
       }
     else {
       fetchitems = await Candidate.findAll({
+        attributes: {
+          exclude: ['remarks', 'reasonId', 'createdAt', 'updatedAt'] // Exclude unnecessary fields
+        },
         include: [
-          { model: Designation, as: "designation" },
-          { model: Education, as: "education" },
-          { 
-            model: Tag,  // Include Tag model instead of CandidateTags
-            
-            as: "tags"
+          {
+            model: Designation,
+            as: "designation",
+            attributes: ['id', 'title'] // Only include relevant fields
+          },
+          {
+            model: Education,
+            as: "education",
+            attributes: ['ugCourse', 'pgCourse', 'postPgCourse'] // Only include relevant fields
+          },
+          {
+            model: Tag,
+            as: "tags",
+            attributes: ['Tag_Name'], // Only include the name of the tag
+            through: { attributes: [] } // Exclude the join table columns like createdAt
+          },
+          {
+            model: ReasonSaveAnswer,
+            as: "reasons",
+            include: [
+              {
+                model: ReasonsForLeaving,
+                as: "reason",
+                attributes: ['reason','id'] // Only include the question
+              },
+              {
+                model: ReasonAnswer,
+                attributes: ['Reason_answer','id'] // Only include the answer
+              }
+            ],
+            attributes: {exclude: ['createdAt', 'updatedAt','answer','questionId','candidateId']} // Exclude unnecessary fields
           }
         ]
       });
+      
     }
       if (!fetchitems || fetchitems.length === 0) {
         res.status(StatusCodes.NOT_FOUND);
@@ -380,9 +412,6 @@ const CandidateCtr = {
                   // regionId: 1,
                   country: data.Country || "",
                   city: data.City || "",
-                  reason1: data.reason1 || "",
-                  reason2: data.reason2 || "",
-                  reason3: data.reason3 || "",
                   UserId: req.user.id,
                   
                 });
