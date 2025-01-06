@@ -13,6 +13,8 @@ import CandidateTags from "../../modals/CandidateTags/CandidateTags";
 import ClientTags from "../../modals/ClientTags";
 import User from "../../modals/User/User";
 import { QueryTypes } from "sequelize";
+import ReasonSaveAnswer from "../../modals/ReasonSaveAnswer/ReasonSaveAnswer";
+import ReasonAnswer from "../../modals/ReasonAnswer/ReasonAnswer";
 interface ExperienceDistribution {
   designationId: number;
   count: number;
@@ -201,9 +203,14 @@ const AnalyticalCtr = {
           'maxCTC',
         ],
         [
+
           sequelize.fn(
-            'AVG',
-            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+            'ROUND',
+            sequelize.fn(
+              'AVG',
+              sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+            ),
+            2
           ),
           'avgCTC',
         ],
@@ -250,9 +257,9 @@ const AnalyticalCtr = {
 
           geoDistribution = await Candidate.findAll({
 
-              attributes: ['city', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
+              attributes: ['state', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
 
-              group: ['city'],
+              group: ['state'],
 
           });
 
@@ -275,9 +282,9 @@ const AnalyticalCtr = {
 
           geoDistribution = await Candidate.findAll({
 
-              attributes: ['city', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
+              attributes: ['state', [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count']], // Specify the table name
 
-              group: ['city'],
+              group: ['state'],
 
               include: [{
 
@@ -380,7 +387,222 @@ const AnalyticalCtr = {
     });
     res.json(ageDistribution);
   }),
+  
+  reasonsForLeavingBarChart: asyncHandler(async (req: any, res: Response) => {
+    const reasons = await ReasonsForLeaving.findAll({
+      attributes: ['id', 'reason'],  // Get reason and its id
+    });
+  
+    // Aggregate the frequency of each reason
+    const reasonsCounts = await Promise.all(
+      reasons.map(async (reason) => {
+        const count = await ReasonSaveAnswer.count({
+          where: {
+            questionId: reason.id,  // The questionId is the reason's ID
+          },
+          include: [
+            {
+              model: ReasonAnswer,
+              as: 'ReasonAnswer',  // Use the correct alias here
+              required: true,  // This ensures we only count records that have an associated ReasonAnswer
+            }
+          ]
+        });
+  
+        return { reason: reason.reason, count };
+      })
+    );
+  
+    // Prepare data for the bar chart
+    const chartData = {
+      labels: reasonsCounts.map((item) => item.reason),
+      series: [{
+        name: 'Frequency',
+        data: reasonsCounts.map((item) => item.count),
+      }],
+    };
+  
+    res.json(chartData);
+  }),
+  
+  
 
+
+  answerDistributionPieChart: asyncHandler(async (req, res: Response) => {
+    const { questionId } = req.params;  // Get the questionId (reasonId)
+  
+    // Find all possible answers from ReasonAnswer table
+    const answers = await ReasonAnswer.findAll({
+      attributes: ['id', 'Reason_answer'],  // Correct column name: 'Reason_answer'
+    });
+  
+    // Count the number of times each answer was selected for the given questionId
+    const answerCounts = await Promise.all(
+      answers.map(async (answer) => {
+        const count = await ReasonSaveAnswer.count({
+          where: {
+            answer: answer.id,  // Referring to the answer id
+            questionId: questionId,  // Referring to the questionId
+          },
+        });
+  
+        return { answer: answer.Reason_answer, count };  // Use 'Reason_answer' to match the column name
+      })
+    );
+  
+    // Prepare data for the pie chart
+    const chartData = {
+      labels: answerCounts.map((item) => item.answer),
+      series: answerCounts.map((item) => item.count),
+    };
+  
+    res.json(chartData);
+  }),
+  
+// // Line Chart: Answer Trends Over Time
+// answerTrendsLineChart : asyncHandler(async (req, res: Response) => {
+//   const { questionId } = req.params;  // Get the questionId (reasonId)
+//   const { startDate, endDate } = req.query;  // Optional: filter by date range
+
+//   const answers = await ReasonAnswer.findAll({
+//       attributes: ['id', 'answer'],  // Assuming 'answer' column contains the answer options
+//   });
+
+//   // Query to count answers over time (using createdAt)
+//   const answerTrends = await Promise.all(
+//       answers.map(async (answer) => {
+//           const trends = await ReasonSaveAnswer.findAll({
+//               attributes: [
+//                   [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
+//                   [sequelize.fn('COUNT', sequelize.col('answer')), 'count'],
+//               ],
+//               where: {
+//                   answer: answer.id,
+//                   questionId: questionId,
+//                   createdAt: {
+//                       [sequelize.Op.between]: [new Date(startDate), new Date(endDate)],  // Date filter
+//                   },
+//               },
+//               group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
+//               order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
+//           });
+
+//           return {
+//               name: answer.answer,
+//               data: trends.map((trend) => ({
+//                   x: trend.date,
+//                   y: trend.count,
+//               })),
+//           };
+//       })
+//   );
+
+//   // Prepare data for the line chart
+//   const chartData = {
+//       series: answerTrends,
+//       xaxis: {
+//           type: 'datetime',
+//       },
+//   };
+
+//   res.json(chartData);
+// }),
+// // Heatmap: Answer Distribution for Each Reason
+// answerDistributionHeatmap : asyncHandler(async (req, res: Response) => {
+//   const reasons = await ReasonsForLeaving.findAll({
+//       attributes: ['id', 'reason'],
+//   });
+
+//   // For each reason, calculate answer distribution
+//   const heatmapData = await Promise.all(
+//       reasons.map(async (reason) => {
+//           const answers = await ReasonAnswer.findAll({
+//               attributes: ['id', 'answer'],
+//           });
+
+//           const answerCounts = await Promise.all(
+//               answers.map(async (answer) => {
+//                   const count = await ReasonSaveAnswer.count({
+//                       where: {
+//                           answer: answer.id,
+//                           questionId: reason.id,
+//                       },
+//                   });
+
+//                   return { x: reason.reason, y: answer.answer, value: count };
+//               })
+//           );
+
+//           return answerCounts;
+//       })
+//   );
+
+//   // Flatten and prepare the heatmap data
+//   const chartData = heatmapData.flat().map((item) => ({
+//       x: item.x,
+//       y: item.y,
+//       value: item.value,
+//   }));
+
+//   res.json({ series: chartData });
+// }),
+// // Stacked Area Chart: Answer Distribution Over Time
+// answerDistributionStackedAreaChart : asyncHandler(async (req, res: Response) => {
+//   const { startDate, endDate } = req.query;  // Optional: filter by date range
+
+//   const reasons = await ReasonsForLeaving.findAll({
+//       attributes: ['id', 'reason'],
+//   });
+
+//   // Fetch answers and their distribution over time
+//   const answerTrends = await Promise.all(
+//       reasons.map(async (reason) => {
+//           const answers = await ReasonAnswer.findAll({
+//               attributes: ['id', 'answer'],
+//           });
+
+//           const trends = await Promise.all(
+//               answers.map(async (answer) => {
+//                   const trendData = await ReasonSaveAnswer.findAll({
+//                       attributes: [
+//                           [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
+//                           [sequelize.fn('COUNT', sequelize.col('answer')), 'count'],
+//                       ],
+//                       where: {
+//                           answer: answer.id,
+//                           questionId: reason.id,
+//                           createdAt: {
+//                               [sequelize.Op.between]: [new Date(startDate), new Date(endDate)],  // Date filter
+//                           },
+//                       },
+//                       group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
+//                       order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
+//                   });
+
+//                   return {
+//                       name: answer.answer,
+//                       data: trendData.map((data) => ({
+//                           x: data.date,
+//                           y: data.count,
+//                       })),
+//                   };
+//               })
+//           );
+
+//           return trends;
+//       })
+//   );
+
+//   // Prepare data for the stacked area chart
+//   const chartData = {
+//       series: answerTrends.flat(),
+//       xaxis: {
+//           type: 'datetime',
+//       },
+//   };
+
+//   res.json(chartData);
+// })
   
  
 };
