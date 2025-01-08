@@ -8,8 +8,14 @@ interface SendMailtype {
   message: any;
 }
 
-const SendMail = ({send_to, subject, message}: SendMailtype) => {
+const SendMail = async ({send_to, subject, message}: SendMailtype) => {
   try {
+    console.log("send_to", send_to);
+    console.log("subject", subject);
+    console.log("message", message);
+    if (!send_to || !subject || !message) {
+      throw new Error("Missing required fields: send_to, subject, or message");
+    }
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -28,7 +34,7 @@ const SendMail = ({send_to, subject, message}: SendMailtype) => {
       html: message, // html body
     };
 
-    transporter.sendMail(option);
+   await transporter.sendMail(option);
   } catch (error: any) {
     console.log(error.message);
   }

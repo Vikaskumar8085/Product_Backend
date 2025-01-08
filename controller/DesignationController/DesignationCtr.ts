@@ -10,6 +10,15 @@ const DesignationCtr = {
   createdesignationctr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
+        const userExists:any = await User.findOne(
+          {where: {id: req.user.id},
+        attributes: ["id", "Type"],
+      });
+        if (userExists.Type !== "superadmin") {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("You are not authorized to create designation");
+        }
+        
         const {title} = req.body;
         // check User existance
         // const userExists: number | unknown = await User.findByPk(req.user);
@@ -73,7 +82,14 @@ const DesignationCtr = {
         //   res.status(404);
         //   throw new Error("User Not Found Please Login !");
         // }
-
+        const userExists:any = await User.findOne(
+          {where: {id: req.user.id},
+        attributes: ["id", "Type"],
+      });
+        if (userExists.Type !== "superadmin") {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("You are not authorized to create designation");
+        }
         const removeitem = await Designation.findByPk(req.params.id);
         if (!removeitem) {
           res.status(StatusCodes.NOT_FOUND);
@@ -103,7 +119,14 @@ const DesignationCtr = {
         //   res.status(404);
         //   throw new Error("User Not Found Please Login !");
         // }
-
+        const userExists:any = await User.findOne(
+          {where: {id: req.user.id},
+        attributes: ["id", "Type"],
+      });
+        if (userExists.Type !== "superadmin") {
+          res.status(StatusCodes.BAD_REQUEST);
+          throw new Error("You are not authorized to create designation");
+        }
         const checkDesigation = await Designation.findByPk(req.params.id);
         if (!checkDesigation) {
           res.status(StatusCodes.BAD_REQUEST);

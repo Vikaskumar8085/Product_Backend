@@ -10,16 +10,12 @@ const sendMessage = async (user: any) => {
   try {
     const payload = {
       apiKey: API_KEY,
-      campaignName: "CM_TEST",
+      campaignName: "CM_management",
       destination: user.phone,
       userName: "IGNITIVE SOFTWARE LABS PRIVATE LIMITED",
       templateParams: [user.name, user.url],
       source: "new-landing-page form",
-      media: {
-        url: "https://whatsapp-media-library.s3.ap-south-1.amazonaws.com/FILE/6353da2e153a147b991dd812/4079142_dummy.pdf",
-        filename: "sample_media",
-      },
-
+      media: {},
       paramsFallbackValue: {
         FirstName: user.url || "User",
       },

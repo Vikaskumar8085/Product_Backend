@@ -23,6 +23,8 @@ class ReasonSaveAnswer
   public questionId!: number;
   public answer!: number;
   date: any;
+    candidateCount: any;
+    ReasonAnswer: any;
 }
 
 ReasonSaveAnswer.init(
@@ -72,30 +74,36 @@ ReasonSaveAnswer.init(
 ReasonSaveAnswer.belongsTo(Candidate, {
   foreignKey: "candidateId",
   as: "candidate",
+  onDelete: "CASCADE",
 });
 
 ReasonSaveAnswer.belongsTo(ReasonsForLeaving, {
   foreignKey: "questionId",
   as: "reason",
+  onDelete: "CASCADE",
 });
 
 ReasonsForLeaving.hasMany(ReasonSaveAnswer, {
   foreignKey: "questionId",
   as: "answers",
+  onDelete: "CASCADE",
 });
 
 Candidate.hasMany(ReasonSaveAnswer, {
   foreignKey: "candidateId",
   as: "reasons",
+  onDelete: "CASCADE",
 });
 
 ReasonSaveAnswer.belongsTo(ReasonAnswer, {
   foreignKey: "answer",
+  onDelete: "CASCADE",
   
 });
 
 ReasonAnswer.hasMany(ReasonSaveAnswer, {
   foreignKey: "answer",
+  onDelete: "CASCADE",
  
 });
 

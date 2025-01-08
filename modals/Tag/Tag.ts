@@ -50,10 +50,12 @@ Tag.init(
 Tag.belongsTo(User, {
   foreignKey: "Created_By",
   as: "user",
+  onDelete: "CASCADE",
 });
 User.hasOne(Tag, {
   foreignKey: "Created_By",
   as: "tag",
+  onDelete: "CASCADE",
 });
 
 export default Tag;

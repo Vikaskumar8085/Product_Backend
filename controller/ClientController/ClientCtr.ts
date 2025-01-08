@@ -8,6 +8,10 @@ import bcrypt from "bcryptjs";
 import ClientTags from "../../modals/ClientTags";
 import Tag from "../../modals/Tag/Tag";
 import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
+import SendMail from "../../utils/SendMail";
+import crypto from "crypto";
+import Token from "../../modals/Token/Token";
+
 const ClientCtr = {
   // create client
   createclientctr: asyncHandler(
@@ -61,7 +65,48 @@ const ClientCtr = {
           res.status(StatusCodes.NOT_FOUND);
           throw new Error("Client Not Found");
         }
-        //merge user and client data for response exclude password field from user
+        let resetToken = crypto.randomBytes(32).toString("hex") + response.id;
+        console.log(resetToken);
+
+        // Hash token before saving to DB
+        const hashedToken = crypto
+          .createHash("sha256")
+          .update(resetToken)
+          .digest("hex");
+        // Delete token if it exists in DB
+        console.log("forget hashed", hashedToken);
+        let token = await Token.findOne({
+          where: {userId: response.userId},
+        });
+
+        if (token) {
+          await token.destroy();
+        }
+
+        await Token.create({
+          userId: response.userId,
+          token: hashedToken,
+          createdAt: new Date(),
+          expireAt: new Date(Date.now() + 30 * 60 * 1000), // Thirty minutes
+        });
+
+        const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+        const message = `
+      <h2>Hello ${clientUser.FirstName}</h2>
+      <p>Please use the url below to reset your password</p>
+      <p> Here is your credential for login</p>
+      <p>Email: ${clientUser.Email}</p>
+      
+      <p>This reset link is valid for only 30 minutes.</p>
+
+      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+
+      <p>Regards...</p>
+      <p>Ignitive Team</p>
+    `;
+        //send the mail to client for your account is created successfully now change your password
+        SendMail({ send_to: clientUser.Email, subject: "Account Created", message });
         const tagNAme = async (tags: number[]) => {
           const tagNames: string[] = [];
           for (const tagId of tags) {
@@ -180,7 +225,15 @@ const ClientCtr = {
           throw new Error("Client not found");
         }
 
-        // Find the associated user by userId
+        const tokens = await Token.findAll({
+          where: {
+            userId: client.userId,
+          },
+        });
+        for (const token of tokens) {
+          await token.destroy();
+        }
+
         const user = await User.findByPk(client.userId);
         if (!user) {
           res.status(StatusCodes.NOT_FOUND);

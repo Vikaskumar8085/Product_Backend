@@ -169,7 +169,8 @@ Candidate.init(
     
     lastReminderSent: {
       type: DataTypes.DATE,
-      allowNull: true,
+      
+      defaultValue: new Date(),
     },
 
     
@@ -183,21 +184,25 @@ Candidate.init(
 // Candidate - User (Many-to-One)
 Candidate.belongsTo(User, {
   foreignKey: "UserId",
-  as: "user"
+  as: "user",
+  onDelete: "CASCADE",
 });
 User.hasMany(Candidate, {
   foreignKey: "UserId",
-  as: "candidates"
+  as: "candidates",
+  onDelete: "CASCADE",
 });
 
 // // Candidate - Designation (Many-to-One)
 Candidate.belongsTo(Designation, {
   foreignKey: "designationId",
-  as: "designation"
+  as: "designation",
+  onDelete: "CASCADE",
 });
 Designation.hasMany(Candidate, {
   foreignKey: "designationId",
-  as: "candidates"
+  as: "candidates",
+  onDelete: "CASCADE",
 });
 
 // // // // Candidate - Region (Many-to-One)

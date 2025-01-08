@@ -61,6 +61,7 @@ const DashboardCtr = {
         const tagIds = clientTags.map((tag) => tag.tagId);
 
         const candidates = await Candidate.count({
+          
           distinct: true, // Ensures each candidate is counted only once
           col: 'id',      // Specify the column to check for distinct values
           include: [{

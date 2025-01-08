@@ -42,6 +42,7 @@ Token.init(
         key: "id",
       },
       allowNull: false,
+      onDelete: "CASCADE",
     },
     token: {
       type: DataTypes.STRING,

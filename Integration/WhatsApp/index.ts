@@ -1,27 +1,32 @@
 import asyncHandler from "express-async-handler";
 import Candidate from "../../modals/Candidate/Candidate";
-import {Op} from "sequelize";
+import {Op, Sequelize} from "sequelize";
 import sendMessage from "../../utils/SendWhatsAppMessage";
+import sequelize from "sequelize";
 
 // Modify the function to not rely on `req` and `res`
 const sendExitInterviewMessage = async (): Promise<void> => {
   try {
     const tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    tenDaysAgo.setDate(tenDaysAgo.getDate());
 
     // Find candidates with empty reasons and no recent reminders
     const candidates = await Candidate.findAll({
+      attributes: ["id", "name", "whatsappNumber", "lastReminderSent"],
       where: {
+        [Op.or]: [
+          { lastReminderSent: { [Op.lt]: tenDaysAgo } },
+          
+        ],
         [Op.and]: [
-          // {
-          //   [Op.or]: [{reason1: ""}, {reason2: ""}, {reason3: ""}],
-          // },
-          {lastReminderSent: {[Op.lt]: tenDaysAgo}},
+          Sequelize.literal(
+            `NOT EXISTS (SELECT 1 FROM \`ReasonSaveAnswer\` WHERE \`ReasonSaveAnswer\`.\`candidateId\` = \`Candidate\`.\`id\`)`
+          ),
         ],
       },
     });
 
-    console.log("Candidates to send messages to:", candidates);
+    
     for (const candidate of candidates) {
       // Call the WhatsApp API to send a message
       console.log("Sending message to candidate:", candidate.whatsappNumber);

@@ -65,9 +65,11 @@ Education.init(
 Candidate.hasOne(Education, {
   foreignKey: "candidateId",
   as: "education",
+  onDelete: "CASCADE",
 });
 Education.belongsTo(Candidate, {
   foreignKey: "candidateId",
   as: "candidate",
+  onDelete: "CASCADE",
 });
 export default Education;
