@@ -77,7 +77,7 @@ Client.init(
     timestamps: true, // Includes createdAt and updatedAt fields
   }
 );
-Client.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasOne(Client, { foreignKey: "userId", as: "client" });
+Client.belongsTo(User, { foreignKey: "userId", as: "user",onDelete: "CASCADE" });
+User.hasOne(Client, { foreignKey: "userId", as: "client",onDelete: "CASCADE" });
 
 export default Client;

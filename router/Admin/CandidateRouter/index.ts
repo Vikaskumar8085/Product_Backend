@@ -10,5 +10,6 @@ candidateRouter.delete("/delete-candidate/:id",verifyToken, CandidateCtr.reomveC
 candidateRouter.put("/update-candidate/:id",verifyToken, CandidateCtr.editCandidateCtr);
 candidateRouter.post("/upload-csv-candidate",verifyToken, upload.single("file"), CandidateCtr.importCandidates);
 candidateRouter.get("/download-csv-candidate", CandidateCtr.returnCandidateCsvFile);
+candidateRouter.get("/fetch-candidate1",verifyToken, CandidateCtr.fetchCandidateCtr1);
 
 export default candidateRouter;

@@ -108,6 +108,61 @@ const response: any = await Degree.findAll({
         }
         },
     ),
+    updateDegreeCtr: asyncHandler(
+        async (req: CustomRequest, res: Response): Promise<any> => {
+        try {
+            const {id} = req.params;
+            const {name, level, duration} = req.body;
+            if (!name || !level || !duration) {
+            res.status(StatusCodes.BAD_REQUEST);
+            throw new Error("Please provide all required fields");
+            }
+            const checkDegree: any = await Degree.findByPk(id);
+            if (!checkDegree) {
+            res.status(StatusCodes.NOT_FOUND);
+            throw new Error("Degree Not Found");
+            }
+            const degreeExists: any = await Degree.findOne({
+                where: {
+                  name,
+                  level,
+                  duration,
+                  id: { [Op.ne]: id } // Ensure the degree with the same name, level, and duration but different id
+                }
+              });
+            if (degreeExists) {
+            res.status(StatusCodes.CONFLICT);
+            throw new Error("Degree Already Exists");
+            }
+            await checkDegree.update({name, level, duration});
+
+            return res
+            .status(StatusCodes.OK)
+            .json({message: "Degree updated successfully", success: true, result:checkDegree });
+        } catch (error: any) {
+            throw new Error(error?.message);
+        }
+        },
+    ),
+    deleteDegreeCtr: asyncHandler(
+        async (req: CustomRequest, res: Response): Promise<any> => {
+        try {
+            const {id} = req.params;
+            const response: any = await Degree.destroy({where: {id}});
+    
+            if (!response) {
+            res.status(StatusCodes.NOT_FOUND);
+            throw new Error("Degree Not Found");
+            }
+    
+            return res
+            .status(StatusCodes.OK)
+            .json({message: "Degree deleted successfully", success: true, result: response});
+        } catch (error: any) {
+            throw new Error(error?.message);
+        }
+        },
+    ),
     };
 
 export default DegreeCtr;

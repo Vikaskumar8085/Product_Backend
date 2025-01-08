@@ -10,6 +10,7 @@ import {Op, or} from "sequelize";
 import {format} from "fast-csv";
 import csv from "csv-parser";
 import ClientTags from "../../modals/ClientTags";
+import Client from "../../modals/Client/Client";
 
 const TagCtr = {
   // create tags
@@ -76,12 +77,39 @@ const TagCtr = {
   fetchtagsCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        // check User existance
-        // const userExists: number | unknown = await User.findByPk(req.user);
-        // if (!userExists) {
-        //   res.status(404);
-        //   throw new Error("User Not Found Please Login !");
-        // }
+        
+        const userExists = await User.findOne({
+          where: {id: req.user.id},
+          attributes: ["id", "Type"],
+        });
+        if (userExists?.Type === "client") {
+          const client = await Client.findOne({
+            where: {userId: req.user.id},
+          });
+          const clientTags = await ClientTags.findAll({
+            where: {ClientId: client?.id},
+          });
+          const tagIds = clientTags.map((tag) => tag.tagId);
+          
+          const fetchitmes = await Tag.findAll({
+            where: {
+              [Op.or]: [
+                { id: tagIds },
+                { Created_By: req.user.id }
+              ]
+            },
+          });
+          if (!fetchitmes) {
+            res.status(StatusCodes.NOT_FOUND);
+            throw new Error("");
+          }
+          return res.status(StatusCodes.OK).json({
+            message: "tags fetch successfully",
+            success: true,
+            result: fetchitmes,
+          });
+        }
+        else{
 
         const fetchitmes = await Tag.findAll();
         if (!fetchitmes) {
@@ -93,6 +121,7 @@ const TagCtr = {
           success: true,
           result: fetchitmes,
         });
+      }
       } catch (error: any) {
         throw new Error(error?.message);
       }
@@ -242,8 +271,10 @@ const TagCtr = {
 
             // Return the response with success and error details
             return res.status(StatusCodes.OK).json({
+              success: true,
               message: `${importedCount} Tags imported successfully`,
               result: TagsData,
+              importedCount,
               errors,
             });
           });

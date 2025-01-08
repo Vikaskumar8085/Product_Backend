@@ -120,7 +120,10 @@ const UserCtr = {
   getUserCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const response = await User.findByPk(req.user.id);
+        const response = await User.findOne({
+          where: {id: req.user.id},
+          attributes: {exclude: ["Password"]},
+        });
 
         if (!response) {
           res.status(StatusCodes.BAD_REQUEST);

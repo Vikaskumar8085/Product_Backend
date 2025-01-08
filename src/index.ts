@@ -27,7 +27,7 @@ const db = async () => {
 db();
 
 // Schedule the job to run every day at 13:35 (1:35 PM)
-cron.schedule("30 18 * * *", async () => {
+cron.schedule("53 15 * * *", async () => {
   console.log("Running scheduled reminder job...");
 
   try {

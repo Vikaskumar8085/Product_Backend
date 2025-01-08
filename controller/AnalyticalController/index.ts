@@ -22,8 +22,28 @@ interface ExperienceDistribution {
 
 const AnalyticalCtr = {
   // Candidate Distribution by Designation
-  candidateDistribution: asyncHandler(async (req: CustomRequest, res: Response) => {
-    const distribution = await Candidate.findAll({
+  candidateDistribution: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+
+      const user = await User.findOne({
+
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          res.status(404).json({ success: false, message: 'User  not found' });
+          return;
+
+      }
+      
+    let distribution: any[];
+    if (user.Type === 'superadmin') {
+    distribution = await Candidate.findAll({
       attributes: [
         'designationId',
         [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count'], // Explicitly qualify 'id' with the table/alias
@@ -36,12 +56,66 @@ const AnalyticalCtr = {
           attributes: ['title'],
         },
       ],
+      order: [[sequelize.literal('count'), 'DESC']], // Order by count in descending order
+      limit: 10, // Limit to top 10 results
     }) as unknown as ExperienceDistribution[];
-
+  
     res.status(200).json({
       success: true,
       data: distribution,
     });
+  } else {
+    const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+    if (!client) {
+
+        res.status(404).json({ success: false, message: "Client not found" });
+        return;
+
+    }
+
+
+    const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+    const tagIds = clientTags.map((tag) => tag.tagId);
+    distribution = await Candidate.findAll({
+      attributes: [
+        'designationId',
+        [sequelize.fn('COUNT', sequelize.col('Candidate.id')), 'count'], // Explicitly qualify 'id' with the table/alias
+      ],
+      group: ['designationId'],
+      include: [
+        {
+          model: Designation,
+          as: 'designation',
+          attributes: ['title'],
+        },
+        {
+          model: Tag,
+          as: "tags",
+          attributes: [],
+          where: {
+            [Op.or]: {
+              id: tagIds,
+              Created_By: req.user.id,
+            },
+          },
+        },
+      ],
+      order: [[sequelize.literal('count'), 'DESC']], // Order by count in descending order
+      limit: 10, // Limit to top 10 results
+    }) as unknown as ExperienceDistribution[];
+    
+    res.status(200).json({
+      success: true,
+      data: distribution,
+    });
+  }
+}
+catch (error: any) {
+  res.status(500).json({ success: false, message: error.message });
+}
   }),
 
 
@@ -60,7 +134,8 @@ const AnalyticalCtr = {
 
       if (!user) {
 
-          return res.status(404).json({ success: false, message: 'User  not found' });
+          res.status(404).json({ success: false, message: 'User  not found' });
+          return;
 
       }
 
@@ -105,7 +180,8 @@ const AnalyticalCtr = {
 
           if (!client) {
 
-              return res.status(404).json({ success: false, message: "Client not found" });
+              res.status(404).json({ success: false, message: "Client not found" });
+              return;
 
           }
 
@@ -131,15 +207,15 @@ const AnalyticalCtr = {
 
               ],
 
-              where: {
+              // where: {
 
-                  [Op.or]: {
+              //     [Op.or]: {
 
-                      '$tags.id$': tagIds, // Ensure candidates are filtered by the client's tags
+              //         '$tags.id$': tagIds, // Ensure candidates are filtered by the client's tags
+                     
+              //     },
 
-                  },
-
-              },
+              // },
 
               include: [{
 
@@ -148,7 +224,17 @@ const AnalyticalCtr = {
                   as: "tags",
 
                   required: true, // Ensure that only candidates with tags are included
-
+                  where: {
+                      
+                        [Op.or]: {
+  
+                            id: tagIds,
+  
+                            Created_By: req.user.id,
+  
+                        },
+  
+                    },
               }],
 
               raw: true // This will return the result as a plain object
@@ -185,8 +271,27 @@ const AnalyticalCtr = {
 }),
 
   // Current CTC Analysis
-  currentCTCAnalysis: asyncHandler(async (req: CustomRequest, res: Response) => {
-    const ctcDistribution = await Candidate.findAll({
+  currentCTCAnalysis: asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
+    try {
+
+      const user = await User.findOne({
+
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          res.status(404).json({ success: false, message: 'User  not found' });
+          return;
+
+      }
+      let ctcDistribution: any[];
+      if(user.Type === 'superadmin') {
+     ctcDistribution = await Candidate.findAll({
       attributes: [
         [
           sequelize.fn(
@@ -223,11 +328,92 @@ const AnalyticalCtr = {
         }
       }
     });
+
   
     res.status(200).json({
       success: true,
       data: ctcDistribution,
     });
+  }
+  else {
+    const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+    if (!client) {
+
+         res.status(404).json({ success: false, message: "Client not found" });
+        return;
+
+    }
+
+
+    const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+    const tagIds = clientTags.map((tag) => tag.tagId);
+
+    ctcDistribution = await Candidate.findAll({
+      include: [{
+        model: Tag,
+        as: "tags",
+        attributes: [],
+        where: {
+          [Op.or]: {
+            id: tagIds,
+            Created_By: req.user.id,
+          },
+        },
+      }],
+      attributes: [
+        [
+          sequelize.fn(
+            'MIN',
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+          ),
+          'minCTC',
+        ],
+        [
+          sequelize.fn(
+            'MAX',
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+          ),
+          'maxCTC',
+        ],
+        [
+
+          sequelize.fn(
+            'ROUND',
+            sequelize.fn(
+              'AVG',
+              sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), 'LPA', ''), 'UNSIGNED')
+            ),
+            2
+          ),
+          'avgCTC',
+        ],
+      ],
+      where: {
+        currentCTC: {
+          [Op.not]: '',
+          [Op.ne]: '',
+          [Op.notLike]: '%null%',
+        
+        },
+        
+      }
+      
+    });
+    res.status(200).json({
+      success: true,
+      data: ctcDistribution,
+    });
+  }
+    
+  } catch (error: any) {
+
+    res.status(500).json({ success: false, message: error.message });
+    return;
+
+}
   }),
 
  
@@ -303,8 +489,9 @@ const AnalyticalCtr = {
                       },
 
                   },
-
+                 
               }],
+              
 
           });
 
@@ -322,8 +509,27 @@ const AnalyticalCtr = {
   ),
 
   // Education Level Analysis
-  educationLevelAnalysis: asyncHandler(async (req, res: Response) => {
-    const educationDistribution = await Candidate.findAll({
+  educationLevelAnalysis: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+
+      const user = await User.findOne({
+
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          res.status(404).json({ success: false, message: 'User  not found' });
+          return;
+
+      }
+      let educationDistribution: any[];
+      if (user.Type === 'superadmin') {
+     educationDistribution = await Candidate.findAll({
         include: [
             {
             model: Education,
@@ -337,17 +543,58 @@ const AnalyticalCtr = {
             [sequelize.fn('COUNT', sequelize.col('education.postPgCourse')), 'postPgCount'],
         ],
     });
+    res.json(educationDistribution);}
+    else {
+      const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+      if (!client) {
+
+          res.status(404).json({ success: false, message: "Client not found" });
+          return;
+
+      }
+
+
+      const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+      const tagIds = clientTags.map((tag) => tag.tagId);
+      educationDistribution = await Candidate.findAll({
+        include: [
+            {
+            model: Education,
+            as: 'education',
+            attributes: [],
+            },
+            {
+              model: Tag,
+              as: "tags",
+              attributes: [],
+              where: {
+                  [Op.or]: {
+                      id: tagIds,
+                      Created_By: req.user.id,
+                  },
+              },
+            }
+        ],
+        attributes: [
+            [sequelize.fn('COUNT', sequelize.col('education.ugCourse')), 'ugCount'],
+            [sequelize.fn('COUNT', sequelize.col('education.pgCourse')), 'pgCount'],
+            [sequelize.fn('COUNT', sequelize.col('education.postPgCourse')), 'postPgCount'],
+        ],
+    });
     res.json(educationDistribution);
+  }
+}
+catch (error: any) {
+  res.status(500).json({ success: false, message: error.message });
+}
+
   }),
 
-  // Reasons for Leaving
-  reasonsForLeaving: asyncHandler(async (req, res: Response) => {
-    const reasonsDistribution = await ReasonsForLeaving.findAll({
-      attributes: ['reason', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
-      group: ['reason'],
-    });
-    res.json(reasonsDistribution);
-  }),
+  
+
 
   // Client Status Analysis (Assuming you have a Client model)
   clientStatusAnalysis: asyncHandler(async (req, res: Response) => {
@@ -360,8 +607,27 @@ const AnalyticalCtr = {
   }),
 
   // Tag Analysis for Candidates
-  tagAnalysis: asyncHandler(async (req, res: Response) => {
-    const tagDistribution = await sequelize.query(`
+  tagAnalysis: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+
+      const user = await User.findOne({
+
+          where: { id: req.user.id },
+
+          attributes: ['id', 'Type'],
+
+      });
+
+
+      if (!user) {
+
+          res.status(404).json({ success: false, message: 'User  not found' });
+          return;
+
+      }
+      let tagDistribution: any[];
+      if (user.Type === 'superadmin') {
+     tagDistribution = await sequelize.query(`
       SELECT t.Tag_Name as tag, COUNT(ct.tagId) as count
       FROM Tag t
       INNER JOIN candidate_tags ct ON t.id = ct.tagId
@@ -370,14 +636,89 @@ const AnalyticalCtr = {
       type: QueryTypes.SELECT,
       raw: true
     });
-  
-    res.json(tagDistribution);
-  }),
+
+    // Sort tags by count in descending order
+    tagDistribution.sort((a: any, b: any) => b.count - a.count);
+
+    // Get top 5 tags
+    const topTags = tagDistribution.slice(0, 5);
+
+    // Group remaining tags under "Other"
+    const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
+    if (otherTagsCount > 0) {
+        topTags.push({ tag: 'Other', count: otherTagsCount });
+    }
+
+    res.json(topTags);
+  }
+  else {
+    const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+      if (!client) {
+
+          res.status(404).json({ success: false, message: "Client not found" });
+          return;
+
+      }
+
+
+      const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+      const tagIds = clientTags.map((tag) => tag.tagId);
+      //now we need to filter using tagIds and Created_By
+      tagDistribution = await sequelize.query(`
+      SELECT t.Tag_Name as tag, COUNT(ct.tagId) as count
+      FROM Tag t
+      INNER JOIN candidate_tags ct ON t.id = ct.tagId
+      WHERE ct.tagId IN (${tagIds.join(',')}) OR t.Created_By = ${req.user.id}
+      GROUP BY t.id, t.Tag_Name
+    `, {
+      type: QueryTypes.SELECT,
+      raw: true
+    });
+    
+    // Sort tags by count in descending order
+    tagDistribution.sort((a: any, b: any) => b.count - a.count);
+
+    // Get top 5 tags
+    const topTags = tagDistribution.slice(0, 5);
+    const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
+    if (otherTagsCount > 0) {
+        topTags.push({ tag: 'Other', count: otherTagsCount });
+    }
+    res.json(topTags);
+  }
+}
+catch (error: any) {
+  res.status(500).json({ success: false, message: error.message });
+}
+
+}),
 
   // Candidate Age Distribution
-  candidateAgeDistribution: asyncHandler(async (req, res: Response) => {
+  candidateAgeDistribution: asyncHandler(async (req: CustomRequest, res: Response) => {
+    try{
+      const user = await User.findOne({
+
+        where: { id: req.user.id },
+
+        attributes: ['id', 'Type'],
+
+    });
+
+
+    if (!user) {
+
+        res.status(404).json({ success: false, message: 'User  not found' });
+        return;
+
+    }
+    let ageDistribution: any[];
     const currentYear = new Date().getFullYear();
-    const ageDistribution = await Candidate.findAll({
+    if (user.Type === 'superadmin') {
+    
+     ageDistribution = await Candidate.findAll({
       attributes: [
         [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) BETWEEN ${currentYear - 25} AND ${currentYear - 20} THEN 1 ELSE 0 END`)), '20-25'],
         [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) BETWEEN ${currentYear - 30} AND ${currentYear - 26} THEN 1 ELSE 0 END`)), '26-30'],
@@ -386,224 +727,62 @@ const AnalyticalCtr = {
       ],
     });
     res.json(ageDistribution);
-  }),
-  
-  reasonsForLeavingBarChart: asyncHandler(async (req: any, res: Response) => {
-    const reasons = await ReasonsForLeaving.findAll({
-      attributes: ['id', 'reason'],  // Get reason and its id
-    });
-  
-    // Aggregate the frequency of each reason
-    const reasonsCounts = await Promise.all(
-      reasons.map(async (reason) => {
-        const count = await ReasonSaveAnswer.count({
+  } else {
+    const client = await Client.findOne({ where: { userId: req.user.id } });
+
+
+      if (!client) {
+
+          res.status(404).json({ success: false, message: "Client not found" });
+          return;
+
+      }
+
+
+      const clientTags = await ClientTags.findAll({ where: { ClientId: client.id } });
+
+      const tagIds = clientTags.map((tag) => tag.tagId);
+      ageDistribution = await Candidate.findAll({
+        attributes: [
+          [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) BETWEEN ${currentYear - 25} AND ${currentYear - 20} THEN 1 ELSE 0 END`)), '20-25'],
+          [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) BETWEEN ${currentYear - 30} AND ${currentYear - 26} THEN 1 ELSE 0 END`)), '26-30'],
+          [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) BETWEEN ${currentYear - 35} AND ${currentYear - 31} THEN 1 ELSE 0 END`)), '31-35'],
+          [sequelize.fn('SUM', sequelize.literal(`CASE WHEN YEAR(dob) < ${currentYear - 35} THEN 1 ELSE 0 END`)), '35+'],
+        ],
+        include: [{
+
+          model: Tag,
+
+          as: "tags",
+          attributes: [],
           where: {
-            questionId: reason.id,  // The questionId is the reason's ID
+
+              [Op.or]: {
+
+                  id: tagIds,
+
+                  Created_By: req.user.id,
+
+              },
+
           },
-          include: [
-            {
-              model: ReasonAnswer,
-              as: 'ReasonAnswer',  // Use the correct alias here
-              required: true,  // This ensures we only count records that have an associated ReasonAnswer
-            }
-          ]
-        });
-  
-        return { reason: reason.reason, count };
-      })
-    );
-  
-    // Prepare data for the bar chart
-    const chartData = {
-      labels: reasonsCounts.map((item) => item.reason),
-      series: [{
-        name: 'Frequency',
-        data: reasonsCounts.map((item) => item.count),
+         
       }],
-    };
-  
-    res.json(chartData);
+      });
+      res.json(ageDistribution);
+    }
+  }
+  catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+
   }),
   
+
+  
   
 
 
-  answerDistributionPieChart: asyncHandler(async (req, res: Response) => {
-    const { questionId } = req.params;  // Get the questionId (reasonId)
-  
-    // Find all possible answers from ReasonAnswer table
-    const answers = await ReasonAnswer.findAll({
-      attributes: ['id', 'Reason_answer'],  // Correct column name: 'Reason_answer'
-    });
-  
-    // Count the number of times each answer was selected for the given questionId
-    const answerCounts = await Promise.all(
-      answers.map(async (answer) => {
-        const count = await ReasonSaveAnswer.count({
-          where: {
-            answer: answer.id,  // Referring to the answer id
-            questionId: questionId,  // Referring to the questionId
-          },
-        });
-  
-        return { answer: answer.Reason_answer, count };  // Use 'Reason_answer' to match the column name
-      })
-    );
-  
-    // Prepare data for the pie chart
-    const chartData = {
-      labels: answerCounts.map((item) => item.answer),
-      series: answerCounts.map((item) => item.count),
-    };
-  
-    res.json(chartData);
-  }),
-  
-// // Line Chart: Answer Trends Over Time
-// answerTrendsLineChart : asyncHandler(async (req, res: Response) => {
-//   const { questionId } = req.params;  // Get the questionId (reasonId)
-//   const { startDate, endDate } = req.query;  // Optional: filter by date range
-
-//   const answers = await ReasonAnswer.findAll({
-//       attributes: ['id', 'answer'],  // Assuming 'answer' column contains the answer options
-//   });
-
-//   // Query to count answers over time (using createdAt)
-//   const answerTrends = await Promise.all(
-//       answers.map(async (answer) => {
-//           const trends = await ReasonSaveAnswer.findAll({
-//               attributes: [
-//                   [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
-//                   [sequelize.fn('COUNT', sequelize.col('answer')), 'count'],
-//               ],
-//               where: {
-//                   answer: answer.id,
-//                   questionId: questionId,
-//                   createdAt: {
-//                       [sequelize.Op.between]: [new Date(startDate), new Date(endDate)],  // Date filter
-//                   },
-//               },
-//               group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
-//               order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
-//           });
-
-//           return {
-//               name: answer.answer,
-//               data: trends.map((trend) => ({
-//                   x: trend.date,
-//                   y: trend.count,
-//               })),
-//           };
-//       })
-//   );
-
-//   // Prepare data for the line chart
-//   const chartData = {
-//       series: answerTrends,
-//       xaxis: {
-//           type: 'datetime',
-//       },
-//   };
-
-//   res.json(chartData);
-// }),
-// // Heatmap: Answer Distribution for Each Reason
-// answerDistributionHeatmap : asyncHandler(async (req, res: Response) => {
-//   const reasons = await ReasonsForLeaving.findAll({
-//       attributes: ['id', 'reason'],
-//   });
-
-//   // For each reason, calculate answer distribution
-//   const heatmapData = await Promise.all(
-//       reasons.map(async (reason) => {
-//           const answers = await ReasonAnswer.findAll({
-//               attributes: ['id', 'answer'],
-//           });
-
-//           const answerCounts = await Promise.all(
-//               answers.map(async (answer) => {
-//                   const count = await ReasonSaveAnswer.count({
-//                       where: {
-//                           answer: answer.id,
-//                           questionId: reason.id,
-//                       },
-//                   });
-
-//                   return { x: reason.reason, y: answer.answer, value: count };
-//               })
-//           );
-
-//           return answerCounts;
-//       })
-//   );
-
-//   // Flatten and prepare the heatmap data
-//   const chartData = heatmapData.flat().map((item) => ({
-//       x: item.x,
-//       y: item.y,
-//       value: item.value,
-//   }));
-
-//   res.json({ series: chartData });
-// }),
-// // Stacked Area Chart: Answer Distribution Over Time
-// answerDistributionStackedAreaChart : asyncHandler(async (req, res: Response) => {
-//   const { startDate, endDate } = req.query;  // Optional: filter by date range
-
-//   const reasons = await ReasonsForLeaving.findAll({
-//       attributes: ['id', 'reason'],
-//   });
-
-//   // Fetch answers and their distribution over time
-//   const answerTrends = await Promise.all(
-//       reasons.map(async (reason) => {
-//           const answers = await ReasonAnswer.findAll({
-//               attributes: ['id', 'answer'],
-//           });
-
-//           const trends = await Promise.all(
-//               answers.map(async (answer) => {
-//                   const trendData = await ReasonSaveAnswer.findAll({
-//                       attributes: [
-//                           [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
-//                           [sequelize.fn('COUNT', sequelize.col('answer')), 'count'],
-//                       ],
-//                       where: {
-//                           answer: answer.id,
-//                           questionId: reason.id,
-//                           createdAt: {
-//                               [sequelize.Op.between]: [new Date(startDate), new Date(endDate)],  // Date filter
-//                           },
-//                       },
-//                       group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
-//                       order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'ASC']],
-//                   });
-
-//                   return {
-//                       name: answer.answer,
-//                       data: trendData.map((data) => ({
-//                           x: data.date,
-//                           y: data.count,
-//                       })),
-//                   };
-//               })
-//           );
-
-//           return trends;
-//       })
-//   );
-
-//   // Prepare data for the stacked area chart
-//   const chartData = {
-//       series: answerTrends.flat(),
-//       xaxis: {
-//           type: 'datetime',
-//       },
-//   };
-
-//   res.json(chartData);
-// })
-  
  
 };
 
