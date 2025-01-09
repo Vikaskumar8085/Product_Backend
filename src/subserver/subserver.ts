@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import indexRouter from "../../router/index"; // Adjust the path if needed
+import cookieParser from "cookie-parser";
 import {
   globalErrorHandler,
   notFoundHandler,
@@ -14,7 +15,12 @@ const createApp = (): Express => {
   
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads/profileImages')));
-  app.use(cors());
+app.use(cookieParser());
+  app.use(cors(
+    {origin:"*",
+      credentials: true,
+    }
+  ));
   app.use(morgan("dev"));
   app.use(bodyParser.json({ limit: "50mb" }));
   app.use(bodyParser.urlencoded({ extended: true }));

@@ -4,14 +4,16 @@ import User from "../../modals/User/User";
 import Token from "../../modals/Token/Token";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import generateToken from "../../middleware/auth/generateToken";
+import generateToken, { refreshToken } from "../../middleware/auth/generateToken";
 import SendMail from "../../utils/SendMail";
 import {CustomRequest} from "../../typeReq/customReq";
 import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import {Op} from "sequelize";
 import {StatusCodes} from "http-status-codes";
 import UserSecurityAnswer from "../../modals/UserSecurityAnswer/index";
 import SecurityQuestion from "../../modals/SecurityQuestions/index";
+import Client from "../../modals/Client/Client";
 dotenv.config();
 
 const UserCtr = {
@@ -55,7 +57,20 @@ const UserCtr = {
         res.status(400);
         throw new Error("User Not Found Please Sign in");
       }
-
+      if (response.Type === "client") {
+        const client:any = await Client.findOne({
+          where: {userId: response.id},
+        });
+        if (!client) {
+          res.status(400);
+          throw new Error("Client Not Found Please Sign in");
+        }
+        //check client status
+        if (client.Status === "InActive") {
+          res.status(400);
+          throw new Error("Your Account is InActive Please Contact Admin");
+        }
+      }
       // compare password
       const checkpassword = await bcrypt.compare(
         req.body.Password,
@@ -69,6 +84,15 @@ const UserCtr = {
       }
       // generate token
       const token = await generateToken(response.id);
+      // generate refresh token
+    
+      const refreshTokenValue = await refreshToken(response.id);
+      res.cookie("jwt", refreshTokenValue, {
+        httpOnly: true, //accessible only by web server
+        secure: true, //https
+        sameSite: "none", //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      });
       return res.status(200).json({
         message: "Login Successfully",
         result: token,
@@ -78,19 +102,68 @@ const UserCtr = {
       throw new Error(error?.message);
     }
   }),
+  //refresh token controller
+  refreshTokenCtr: asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<any> => {
+      try {
+        const token = req.cookies;
+        console.log("token", token);
+        if (!token?.jwt) {
+          return res.status(400).json({message: "Unauthorized"});
+        }
+        const refreshTokenValues = token.jwt;
+        console.log("refreshTokenValues", refreshTokenValues);
+        console.log("refreshTokenValues", refreshTokenValues);
+        const decoded = jwt.verify(refreshTokenValues, process.env.JWT_SECRET as string) as jwt.JwtPayload;
+        console.log("decoded", decoded);
+        const user = await User.findByPk(decoded.id);
+        console.log("user", user);
+        if (!user) {
+          res.status(404).json({ message: "User not found, Please login" });
+          return;
+        }
+
+        const newToken =await generateToken(user.id);
+        
+        const refreshTokenValue =await refreshToken(user.id);
+        
+
+        res.cookie("jwt", refreshTokenValue, {
+          httpOnly: true, // accessible only by web server
+          secure: true, // https in production
+          sameSite: "none", // cross-site cookie
+          maxAge: 7 * 24 * 60 * 60 * 1000, // cookie expiry: set to match rT
+        });
+
+        res.status(200).json({
+          success: true,
+          message: "Token Refreshed",
+          result: newToken,
+        });
+      } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+      }
+    }
+  ),
   // logout Ctr
   logoutCtr: asyncHandler(async (req: Request, res: Response): Promise<any> => {
-    try {
-      return res
-        .status(200)
-        .json({message: "Successfully logged out", status: "success"});
-    } catch (error: any) {
-      res.status(500).json({
-        message: error.message || "An error occurred during logout",
-        status: "error",
+    try{
+      res.cookie("jwt", "", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        expires: new Date(0),
+      });
+      res.status(200).json({
+        success: true,
+        message: "Logged Out",
       });
     }
-  }),
+    catch(error: any){
+      throw new Error(error?.message);
+    }
+  }
+  ),
 
   // Profile Ctr
   profileCtr: asyncHandler(

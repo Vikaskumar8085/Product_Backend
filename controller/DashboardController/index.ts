@@ -25,7 +25,7 @@ const DashboardCtr = {
       if (user.Type === "superadmin") {
         const [candidates, clients, tags, designations] = await Promise.all([
           Candidate.count(),
-          Client.count(),
+          Client.count({where: {Status: "Active"}}),
           Tag.count(),
           Designation.count(),
         ]);
