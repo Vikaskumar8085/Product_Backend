@@ -35,11 +35,11 @@ const sendExitInterviewMessage = async (): Promise<void> => {
         url: `http://localhost:3000/reason-leaving-job/${candidate.id}`,
         phone: candidate.whatsappNumber,
       };
-      await sendMessage(user);
+      // await sendMessage(user);
 
       // Update the `lastReminderSent` field
-      candidate.lastReminderSent = new Date();
-      await candidate.save();
+      // candidate.lastReminderSent = new Date();
+      // await candidate.save();
     }
   } catch (error: any) {
     console.error("WhatsApp message send error:", error);

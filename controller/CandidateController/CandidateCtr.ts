@@ -442,15 +442,7 @@ const CandidateCtr = {
           as: "reasons",
           required: filters.reasons || filters.reasonAnswer ? true : false,
           include: [
-            {
-              model: ReasonsForLeaving,
-              as: "reason",
-              attributes: ["reason", "id"],
-              required: filters.reasons ? true : false,
-              where: filters.reasons ? {
-                reason: { [Op.like]: `%${filters.reasons}%` }
-              } : undefined
-            },
+            
             {
               model: ReasonAnswer,
               attributes: ["Reason_answer", "id"],
@@ -483,10 +475,7 @@ const CandidateCtr = {
           order: [['id', 'ASC']], // Add consistent ordering
         });
   
-        if (!fetchitems || fetchitems.length === 0) {
-          res.status(StatusCodes.NOT_FOUND);
-          throw new Error("Candidates Not Found");
-        }
+       
   
         return res.status(StatusCodes.OK).json({
           message: "Fetch Candidate Successfully",
@@ -998,6 +987,7 @@ const CandidateCtr = {
         }
   
         const { page = 1, limit = 20, ...filters } = req.query;
+        
         const offset = (Number(page) - 1) * Number(limit);
   
         // Separate whereCondition for main table
@@ -1025,6 +1015,17 @@ const CandidateCtr = {
             );
           }
         }
+
+        const { currentCTCRange } = filters;
+      if (currentCTCRange) {
+        const [minCTC, maxCTC] = (currentCTCRange as string).split('-').map(Number);
+        if (!isNaN(minCTC) && !isNaN(maxCTC)) {
+          whereCondition.currentCTC = sequelize.where(
+            sequelize.cast(sequelize.fn('REPLACE', sequelize.col('currentCTC'), ' LPA', ''), 'UNSIGNED'),
+            { [Op.between]: [minCTC, maxCTC] }
+          );
+        }
+      }
         // Initialize include conditions
         let includeConditions: any[] = [];
   
@@ -1118,6 +1119,12 @@ const CandidateCtr = {
           model: ReasonSaveAnswer,
           as: "reasons",
           required: filters.reasons || filters.reasonAnswer ? true : false,
+          where: filters.reasonAnswer ? {
+            answer: {
+              [Op.in]: Array.isArray(filters.reasonAnswer) ? 
+                (filters.reasonAnswer as string[]).map((id: string) => parseInt(id)) : []
+            }
+          } : undefined,
           include: [
             {
               model: ReasonsForLeaving,
@@ -1125,20 +1132,18 @@ const CandidateCtr = {
               attributes: ["reason", "id"],
               required: filters.reasons ? true : false,
               where: filters.reasons ? {
-                id: { [Op.in]: Array.isArray(filters.reasons) ? (filters.reasons as string[]).map((id: string) => parseInt(id)) : [] },
-              } : undefined,
+                id: { [Op.in]: Array.isArray(filters.reasons) ? 
+                  (filters.reasons as string[]).map((id: string) => parseInt(id)) : [] 
+                }
+              } : undefined
             },
             {
               model: ReasonAnswer,
               attributes: ["Reason_answer", "id"],
-              required: filters.reasonAnswer ? true : false,
-              where: filters.reasonAnswer ? {
-                id: { [Op.in]: Array.isArray(filters.reasonAnswer) ? (filters.reasonAnswer as string[]).map((id: string) => parseInt(id)) : [] },
-              } : undefined,
             }
-          ],
-          attributes: { exclude: ["createdAt", "updatedAt"] }
+          ]
         };
+        console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$",reasonsInclude);
         includeConditions.push(reasonsInclude);
   
         // First get the total count with a separate query
@@ -1158,10 +1163,7 @@ const CandidateCtr = {
           order: [['id', 'ASC']], // Add consistent ordering
         });
   
-        if (!fetchitems || fetchitems.length === 0) {
-          res.status(StatusCodes.NOT_FOUND);
-          throw new Error("Candidates Not Found");
-        }
+       
   
         return res.status(StatusCodes.OK).json({
           message: "Fetch Candidate Successfully",
