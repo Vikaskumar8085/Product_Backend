@@ -13,6 +13,7 @@ import securityRouter from "./Admin/Security/index";
 import ReasonSaveAnswerRouter from "./Admin/ReasonSaveAnswerRouter";
 import analyticalRouter from "./Admin/AnalyticalRouter";
 import dashboardRouter from "./Admin/DashboardRouter";
+import whatsappRouter from "./Admin/Whatsapp";
 
 const indexRouter = express.Router();
 indexRouter.use("/user", userRouter);
@@ -29,4 +30,5 @@ indexRouter.use("/security", securityRouter);
 indexRouter.use("/v1", ReasonSaveAnswerRouter);
 indexRouter.use("/analytical", analyticalRouter);
 indexRouter.use("/dashboard", dashboardRouter);
+indexRouter.use("/whatsapp",whatsappRouter);
 export default indexRouter;

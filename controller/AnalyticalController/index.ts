@@ -145,7 +145,7 @@ catch (error: any) {
         '1-3 years': number;
         '3-5 years': number;
         '5-10 years': number;
-        '10+ years': number;
+        '10-20 years': number;
       }
 
       let experienceDistribution: any[];
@@ -163,9 +163,9 @@ catch (error: any) {
 
                   [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
 
-                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 5 AND 10 THEN 1 ELSE 0 END")), '5-10 years'],
 
-                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 10 AND 20 THEN 1 ELSE 0 END")), '10-20 years'],
 
               ],
 
@@ -201,9 +201,9 @@ catch (error: any) {
 
                   [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 3 AND 5 THEN 1 ELSE 0 END")), '3-5 years'],
 
-                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 5 AND workExp <= 10 THEN 1 ELSE 0 END")), '5-10 years'],
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 5 AND 10 THEN 1 ELSE 0 END")), '5-10 years'],
 
-                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp > 10 THEN 1 ELSE 0 END")), '10+ years'],
+                  [sequelize.fn('SUM', sequelize.literal("CASE WHEN workExp BETWEEN 10 AND 20 THEN 1 ELSE 0 END")), '10-20 years']
 
               ],
 
@@ -256,7 +256,7 @@ catch (error: any) {
 
           { experience_range: "5-10 years", count: experienceDistribution[0]['5-10 years'] || 0 },
 
-          { experience_range: "10+ years", count: experienceDistribution[0]['10+ years'] || 0 }
+          { experience_range: "10-20 years", count: experienceDistribution[0]['10-20 years'] || 0 },
 
       ];
 
@@ -626,6 +626,7 @@ catch (error: any) {
 
       }
       let tagDistribution: any[];
+      let topTags: any[] = [];
       if (user.Type === 'superadmin') {
      tagDistribution = await sequelize.query(`
       SELECT t.Tag_Name as tag, COUNT(ct.tagId) as count
@@ -641,17 +642,17 @@ catch (error: any) {
     tagDistribution.sort((a: any, b: any) => b.count - a.count);
 
     // Get top 5 tags
-    const topTags = tagDistribution.slice(0, 5);
+    topTags = tagDistribution.slice(0, 5);
 
     // Group remaining tags under "Other"
-    const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
-    if (otherTagsCount > 0) {
-        topTags.push({ tag: 'Other', count: otherTagsCount });
-    }
+    // const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
+    // if (otherTagsCount > 0) {
+    //     topTags.push({ tag: 'Other', count: otherTagsCount });
+    // }
 
-    res.json(topTags);
+    
   }
-  else {
+  else if (user.Type === 'client') {
     const client = await Client.findOne({ where: { userId: req.user.id } });
 
 
@@ -682,13 +683,14 @@ catch (error: any) {
     tagDistribution.sort((a: any, b: any) => b.count - a.count);
 
     // Get top 5 tags
-    const topTags = tagDistribution.slice(0, 5);
-    const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
-    if (otherTagsCount > 0) {
-        topTags.push({ tag: 'Other', count: otherTagsCount });
-    }
-    res.json(topTags);
+    topTags = tagDistribution.slice(0, 5);
+    // const otherTagsCount = tagDistribution.slice(5).reduce((acc: number, tag: any) => acc + tag.count, 0);
+    // if (otherTagsCount > 0) {
+    //     topTags.push({ tag: 'Other', count: otherTagsCount });
+    // }
+   
   }
+  res.json(topTags);
 }
 catch (error: any) {
   res.status(500).json({ success: false, message: error.message });

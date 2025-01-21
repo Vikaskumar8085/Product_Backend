@@ -594,7 +594,14 @@ const CandidateCtr = {
             {
               model: ReasonSaveAnswer,
               as: "reasons",
-              
+              include: [
+            
+                {
+                  model: ReasonAnswer,
+                 
+                  
+                }
+              ],
             }
             
           ]
@@ -611,168 +618,494 @@ const CandidateCtr = {
       }
     }
   ),
-  importCandidates: asyncHandler(
-    async (req: CustomRequest, res: Response): Promise<any> => {
-      try {
-        if (!req.file) {
-          return res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({message: "No file uploaded"});
-        }
+//   importCandidates: asyncHandler(
+//     async (req: CustomRequest, res: Response): Promise<any> => {
+//       try {
+//         if (!req.file) {
+//           return res
+//             .status(StatusCodes.BAD_REQUEST)
+//             .json({message: "No file uploaded"});
+//         }
 
-        const filePath = path.join(
-          __dirname,
-          "../../uploads/",
-          req.file.filename
-        );
-        const candidatesData: any[] = [];
-        console.log(`Processing file: ${filePath}`);
+//         const filePath = path.join(
+//           __dirname,
+//           "../../uploads/",
+//           req.file.filename
+//         );
+//         const candidatesData: any[] = [];
+//         console.log(`Processing file: ${filePath}`);
 
-        // Read the CSV file
-        fs.createReadStream(filePath)
-          .pipe(csv())
-          .on("data", (row: any) => {
-            candidatesData.push(row);
-          })
-          .on("end", async () => {
-            let importedCount = 0;
-            const errors: string[] = [];
+//         // Read the CSV file
+//         fs.createReadStream(filePath)
+//           .pipe(csv())
+//           .on("data", (row: any) => {
+//             candidatesData.push(row);
+//           })
+//           .on("end", async () => {
+//             let importedCount = 0;
+//             const errors: string[] = [];
 
-            // Process the candidates data
-            for (const data of candidatesData) {
-              let educationData:any ={
-                candidateId:0,
-                ugCourse: "",
-                pgCourse: "",
-                postPgCourse: ""
-              }
-              try {
-                // Basic validations
-                if (
-                  !data["Candidate Name"] ||
-                  !data.Email ||
-                  !data["Contact No"] ||
-                  !data["Whatsapp No"] ||
-                  !data.Designation
-                ) {
-                  errors.push(
-                    `Missing required fields for candidate: ${
-                      data["Candidate Name"] || "Unknown"
-                    }`
-                  );
-                  continue;
-                }
+//             // Process the candidates data
+//             for (const data of candidatesData) {
+//               let educationData:any ={
+//                 candidateId:0,
+//                 ugCourse: "",
+//                 pgCourse: "",
+//                 postPgCourse: ""
+//               }
+//               try {
+//                 // Basic validations
+//                 if (
+//                   !data["Candidate Name"] ||
+//                   !data.Email ||
+//                   !data["Contact No"] ||
+//                   !data["Whatsapp No"] ||
+//                   !data.Designation
+//                 ) {
+//                   errors.push(
+//                     `Missing required fields for candidate: ${
+//                       data["Candidate Name"] || "Unknown"
+//                     }`
+//                   );
+//                   continue;
+//                 }
 
-                // Validate email format
-                if (!/^\S+@\S+\.\S+$/.test(data.Email)) {
-                  errors.push(
-                    `Invalid email format for candidate: ${data["Candidate Name"]}`
-                  );
-                  continue;
-                }
-                // validate Contact Number and Whatsapp Number it should be number and length should be 10
-                if (!/^\d{10}$/.test(data["Contact No"])) {
-                  errors.push(
-                    `Invalid Contact Number for candidate: ${data["Candidate Name"]}`
-                  );
-                  continue;
-                }
-                if (!/^\d{10}$/.test(data["Whatsapp No"])) {
-                  errors.push(
-                    `Invalid Whatsapp Number for candidate: ${data["Candidate Name"]}`
-                  );
-                  continue;
-                }
-                // workExp should be look like this for example 2 Y or 2.5 Y
-                if (!/^\d+(\.\d+)? Y$/.test(data["Work Exp"])) {
-                  errors.push(
-                    `Invalid Work Experience for candidate: ${data["Candidate Name"]}. Please provide in Y format. For example 2 Y or 2.5 Y`
-                  );
-                  continue;
-                }
-                // Current CTC should be look like this for example 2.5 LPA or 5 LPA
-                if (!/^\d+(\.\d+)? LPA$/.test(data["Current Annual Salary / CTC"])) {
-                  errors.push(
-                    `Invalid Current CTC for candidate: ${data["Candidate Name"]}.Please provide in LPA format.For example 2.5 LPA`
-                  );
-                  continue;
-                }
-                // date of birth should be in this format 2021-09-01
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(data["Date of Birth"])) {
-                  errors.push(
-                    `Invalid Date of Birth for candidate: ${data["Candidate Name"]}. Please provide in YYYY-MM-DD format`
-                  );
-                  continue;
-                }
-                //validate the UG,PG,Post PG should be present in degree table
-                if (data.UG) {
-                  const checkUG = await Degree.findOne({
-                    where: { name: data.UG },
-                  });
+//                 // Validate email format
+//                 if (!/^\S+@\S+\.\S+$/.test(data.Email)) {
+//                   errors.push(
+//                     `Invalid email format for candidate: ${data["Candidate Name"]}`
+//                   );
+//                   continue;
+//                 }
+//                 // validate Contact Number and Whatsapp Number it should be number and length should be 10
+//                 if (!/^\d{10}$/.test(data["Contact No"])) {
+//                   errors.push(
+//                     `Invalid Contact Number for candidate: ${data["Candidate Name"]}`
+//                   );
+//                   continue;
+//                 }
+//                 if (!/^\d{10}$/.test(data["Whatsapp No"])) {
+//                   errors.push(
+//                     `Invalid Whatsapp Number for candidate: ${data["Candidate Name"]}`
+//                   );
+//                   continue;
+//                 }
+//                 // workExp should be look like this for example 2 Y or 2.5 Y
+//                 if (!/^\d+(\.\d+)? Y$/.test(data["Work Exp"])) {
+//                   errors.push(
+//                     `Invalid Work Experience for candidate: ${data["Candidate Name"]}. Please provide in Y format. For example 2 Y or 2.5 Y`
+//                   );
+//                   continue;
+//                 }
+//                 // Current CTC should be look like this for example 2.5 LPA or 5 LPA
+//                 if (!/^\d+(\.\d+)? LPA$/.test(data["Current Annual Salary / CTC"])) {
+//                   errors.push(
+//                     `Invalid Current CTC for candidate: ${data["Candidate Name"]}.Please provide in LPA format.For example 2.5 LPA`
+//                   );
+//                   continue;
+//                 }
+//                 // date of birth should be in this format 2021-09-01
+//                 if (!/^\d{4}-\d{2}-\d{2}$/.test(data["Date of Birth"])) {
+//                   errors.push(
+//                     `Invalid Date of Birth for candidate: ${data["Candidate Name"]}. Please provide in YYYY-MM-DD format`
+//                   );
+//                   continue;
+//                 }
+//                 //validate the UG,PG,Post PG should be present in degree table
+//                 if (data.UG) {
+//                   const checkUG = await Degree.findOne({
+//                     where: { name: data.UG },
+//                   });
                   
-                  if (checkUG) {
-                    educationData.ugCourse = checkUG.name;
-                  }
-                  if (!checkUG) {
-                    errors.push(
-                      `Invalid UG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid UG degree`
-                    );
-                    continue;
-                  }
-                }
-                if (data.PG) {
-                  const checkPG = await Degree.findOne({
-                    where: { name: data.PG },
-                  });
-                  if (checkPG) {
-                    educationData.pgCourse = checkPG.name;
-                  }
-                  if (!checkPG) {
-                    errors.push(
-                      `Invalid PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid PG degree`
-                    );
-                    continue;
-                  }
-                }
-                if (data["Post PG"]) {
-                  const checkPostPG = await Degree.findOne({
-                    where: { name: data["Post PG"] },
-                  });
-                  if (checkPostPG) {
-                    educationData.postPgCourse = checkPostPG.name;
-                  }
-                  if (!checkPostPG) {
-                    errors.push(
-                      `Invalid Post PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid Post PG degree`
-                    );
-                    continue;
-                  }
-                }
+//                   if (checkUG) {
+//                     educationData.ugCourse = checkUG.name;
+//                   }
+//                   if (!checkUG) {
+//                     errors.push(
+//                       `Invalid UG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid UG degree`
+//                     );
+//                     continue;
+//                   }
+//                 }
+//                 if (data.PG) {
+//                   const checkPG = await Degree.findOne({
+//                     where: { name: data.PG },
+//                   });
+//                   if (checkPG) {
+//                     educationData.pgCourse = checkPG.name;
+//                   }
+//                   if (!checkPG) {
+//                     errors.push(
+//                       `Invalid PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid PG degree`
+//                     );
+//                     continue;
+//                   }
+//                 }
+//                 if (data["Post PG"]) {
+//                   const checkPostPG = await Degree.findOne({
+//                     where: { name: data["Post PG"] },
+//                   });
+//                   if (checkPostPG) {
+//                     educationData.postPgCourse = checkPostPG.name;
+//                   }
+//                   if (!checkPostPG) {
+//                     errors.push(
+//                       `Invalid Post PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid Post PG degree`
+//                     );
+//                     continue;
+//                   }
+//                 }
 
              
 
-                // Check if Designation exists or create a new one
-                const [designation] = await Designation.findOrCreate({
-                  where: {title: data.Designation},
+//                 // Check if Designation exists or create a new one
+//                 const [designation] = await Designation.findOrCreate({
+//                   where: {title: data.Designation},
+//                 });
+
+//                 // Check if Candidate already exists (by email or contact number)
+//                 const existingCandidate = await Candidate.findOne({
+//                   where: {
+//                     [Op.or]: [
+//                       {email: data.Email},
+//                       {contactNumber: data["Contact No"]},
+//                     ],
+//                   },
+//                 });
+//                 if (existingCandidate) {
+//                   errors.push(
+//                     `Candidate already exists: ${data["Candidate Name"]} (${data.Email})`
+//                   );
+//                   continue;
+//                 }
+
+        
+//                 const newCandidate = await Candidate.create({
+//                   name: data["Candidate Name"],
+//                   resumeTitle: data["Resume Title"] || "",
+//                   contactNumber: data["Contact No"],
+//                   whatsappNumber: data["Whatsapp No"],
+//                   email: data.Email,
+//                   workExp: data["Work Exp"] || "",
+//                   currentCTC: data["Current Annual Salary / CTC"],
+//                   currentLocation: data["Current Location"] || "",
+//                   state: data.State || "",
+//                   currentEmployeer:data["currentEmployeer"] || "",
+//                   postalAddress: data["Postal Address"] || "",
+//                   preferredLocation: data["Preferred Location"] || "",
+//                   dob: new Date(data["Date of Birth"]),
+//                   designationId: designation.id,
+//                   lastActive: new Date(),
+//                   remarks: data["Remarks"] || "",
+//                   // regionId: 1,
+//                   country: data.Country || "",
+//                   city: data.City || "",
+//                   UserId: req.user.id,
+                  
+//                 });
+//                 if (newCandidate) {
+//                   educationData.candidateId = newCandidate.id;
+//                 }
+//                 if (data.Tags && typeof data.Tags === 'string') {
+//   // Split the string by commas, then trim whitespace around each tag
+//   const tags: string[] = data.Tags.split(',').map((tag: string) => tag.trim());
+
+//   // Iterate over the array of tags
+//   for (const tagName of tags) {
+//     // Ensure the tag is not an empty string
+//     if (tagName) {
+//       try {
+//         // Find or create the tag in the Tag table
+//         const [tagData] = await Tag.findOrCreate({
+//           where: { Tag_Name: tagName,Created_By:req.user.id },
+//         });
+
+//         // Create the association between the candidate and the tag
+//         await CandidateTags.create({
+//           candidateId: newCandidate.id,
+//           tagId: tagData.id
+//         });
+
+//         console.log(`Tag "${tagName}" processed successfully.`);
+//       } catch (err) {
+//         console.error(`Error processing tag "${tagName}":`, err);
+//       }
+//     } else {
+//       console.warn('Empty tag encountered, skipping.');
+//     }
+//   }
+// } else {
+//   console.warn('Invalid Tags format: Expected a comma-separated string.');
+// }
+
+                
+//   // Only create Education data if at least one course is provided
+//   // const educationData = {
+//   //   candidateId: newCandidate.id,
+//   //   ugCourse: data.UG || null,  // Use `null` if the course is not provided
+//   //   pgCourse: data.PG || null,
+//   //   postPgCourse: data['Post PG'] || null
+//   // };
+  
+//   try {
+//     // Only create Education entry if at least one course is provided
+//     await Education.create(educationData);
+//     console.log('Education data successfully added for candidate', newCandidate.id);
+//   } catch (error) {
+//     console.error('Error adding education data:', error);
+//   }
+
+
+
+//                 importedCount++;
+//               } catch (err: any) {
+//                 errors.push(
+//                   `Failed to import candidate: ${data["Candidate Name"]}. Error: ${err.message}`
+//                 );
+//               }
+//             }
+
+//             // Delete the file after processing
+//             fs.unlinkSync(filePath);
+
+//             // Return the response with success and error details
+//             if (errors.length > 0) {
+//               return res.status(StatusCodes.PARTIAL_CONTENT).json({
+//                 message: `${importedCount} Candidate(s) Successfully Imported, but some failed.`,
+//                 success: true,
+//                 errors, // List of errors for failed candidates
+//                 importedCount, // Count of successful imports
+//                 failedCount: errors.length, // Count of failed imports
+                
+//               });
+//             } else {
+//               return res.status(StatusCodes.CREATED).json({
+//                 message: `${importedCount} Candidate(s) Successfully Imported`,
+//                 success: true,
+//                 errors: [], // No errors in the success case
+//                 importedCount, // Count of successfully imported candidates
+//               });
+//             }
+            
+           
+//           });
+//       } catch (error: any) {
+//         return res
+//           .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//           .json({message: error.message});
+//       }
+//     }
+//   ),
+importCandidates: asyncHandler(
+  async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+      const whoisUser = await User.findOne({
+        where: { id: req.user.id },
+        attributes: { exclude: ["Password"] },
+      });
+      if (!whoisUser) {
+        res.status(StatusCodes.NOT_FOUND);
+        throw new Error("User Not Found");
+      }
+      if (!req.file) {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ message: "No file uploaded" });
+      }
+
+      const filePath = path.join(
+        __dirname,
+        "../../uploads/",
+        req.file.filename
+      );
+      const candidatesData: any[] = [];
+      console.log(`Processing file: ${filePath}`);
+
+      // Read the CSV file
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on("data", (row: any) => {
+          candidatesData.push(row);
+        })
+        .on("end", async () => {
+          let importedCount = 0;
+          let updatedCount = 0;
+          const errors: string[] = [];
+
+          // Process the candidates data
+          for (const data of candidatesData) {
+            let educationData: any = {
+              candidateId: 0,
+              ugCourse: "",
+              pgCourse: "",
+              postPgCourse: ""
+            };
+            try {
+              // Basic validations
+              if (
+                !data["Candidate Name"] ||
+                !data.Email ||
+                !data["Contact No"] ||
+                !data["Whatsapp No"] ||
+                !data.Designation
+              ) {
+                errors.push(
+                  `Missing required fields for candidate: ${
+                    data["Candidate Name"] || "Unknown"
+                  }`
+                );
+                continue;
+              }
+
+              // Validate email format
+              if (!/^\S+@\S+\.\S+$/.test(data.Email)) {
+                errors.push(
+                  `Invalid email format for candidate: ${data["Candidate Name"]}`
+                );
+                continue;
+              }
+              // validate Contact Number and Whatsapp Number it should be number and length should be 10
+              if (!/^\d{10}$/.test(data["Contact No"])) {
+                errors.push(
+                  `Invalid Contact Number for candidate: ${data["Candidate Name"]}`
+                );
+                continue;
+              }
+              if (!/^\d{10}$/.test(data["Whatsapp No"])) {
+                errors.push(
+                  `Invalid Whatsapp Number for candidate: ${data["Candidate Name"]}`
+                );
+                continue;
+              }
+              // workExp should be look like this for example 2 Y or 2.5 Y
+              if (!/^\d+(\.\d+)? Y$/.test(data["Work Exp"])) {
+                errors.push(
+                  `Invalid Work Experience for candidate: ${data["Candidate Name"]}. Please provide in Y format. For example 2 Y or 2.5 Y`
+                );
+                continue;
+              }
+              // Current CTC should be look like this for example 2.5 LPA or 5 LPA
+              if (!/^\d+(\.\d+)? LPA$/.test(data["Current Annual Salary / CTC"])) {
+                errors.push(
+                  `Invalid Current CTC for candidate: ${data["Candidate Name"]}.Please provide in LPA format.For example 2.5 LPA`
+                );
+                continue;
+              }
+              // date of birth should be in this format 2021-09-01
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(data["Date of Birth"])) {
+                errors.push(
+                  `Invalid Date of Birth for candidate: ${data["Candidate Name"]}. Please provide in YYYY-MM-DD format`
+                );
+                continue;
+              }
+              //validate the UG,PG,Post PG should be present in degree table
+              if (data.UG) {
+                const checkUG = await Degree.findOne({
+                  where: { name: data.UG },
                 });
 
-                // Check if Candidate already exists (by email or contact number)
-                const existingCandidate = await Candidate.findOne({
-                  where: {
-                    [Op.or]: [
-                      {email: data.Email},
-                      {contactNumber: data["Contact No"]},
-                    ],
-                  },
+                if (checkUG) {
+                  educationData.ugCourse = checkUG.name;
+                }
+                if (!checkUG) {
+                  errors.push(
+                    `Invalid UG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid UG degree`
+                  );
+                  continue;
+                }
+              }
+              if (data.PG) {
+                const checkPG = await Degree.findOne({
+                  where: { name: data.PG },
                 });
-                if (existingCandidate) {
+                if (checkPG) {
+                  educationData.pgCourse = checkPG.name;
+                }
+                if (!checkPG) {
+                  errors.push(
+                    `Invalid PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid PG degree`
+                  );
+                  continue;
+                }
+              }
+              if (data["Post PG"]) {
+                const checkPostPG = await Degree.findOne({
+                  where: { name: data["Post PG"] },
+                });
+                if (checkPostPG) {
+                  educationData.postPgCourse = checkPostPG.name;
+                }
+                if (!checkPostPG) {
+                  errors.push(
+                    `Invalid Post PG Degree for candidate: ${data["Candidate Name"]}. Please provide a valid Post PG degree`
+                  );
+                  continue;
+                }
+              }
+
+              // Check if Designation exists or create a new one
+              let designation;
+              if (whoisUser.Type === "superadmin") {
+               [designation] = await Designation.findOrCreate({
+                where: { title: data.Designation },
+              });}
+              else{
+                designation = await Designation.findOne({
+                  where: { title: data.Designation },
+                });
+              }
+              if (!designation) {
+                errors.push(
+                  `Invalid Designation for candidate: ${data["Candidate Name"]}. Please provide a valid Designation`
+                );
+                continue;
+              }
+
+              // Check if Candidate already exists (by email or contact number)
+              const existingCandidate = await Candidate.findOne({
+                where: {
+                  [Op.or]: [
+                    { email: data.Email },
+                    { contactNumber: data["Contact No"] },
+                  ],
+                },
+              });
+
+              if (existingCandidate) {
+
+                if (whoisUser.Type === "client" && existingCandidate.UserId !== req.user.id) {
                   errors.push(
                     `Candidate already exists: ${data["Candidate Name"]} (${data.Email})`
                   );
                   continue;
                 }
+                // Update existing candidate
+                await existingCandidate.update({
+                  name: data["Candidate Name"],
+                  resumeTitle: data["Resume Title"] || "",
+                  contactNumber: data["Contact No"],
+                  whatsappNumber: data["Whatsapp No"],
+                  email: data.Email,
+                  workExp: data["Work Exp"] || "",
+                  currentCTC: data["Current Annual Salary / CTC"],
+                  currentLocation: data["Current Location"] || "",
+                  state: data.State || "",
+                  currentEmployeer: data["currentEmployeer"] || "",
+                  postalAddress: data["Postal Address"] || "",
+                  preferredLocation: data["Preferred Location"] || "",
+                  dob: new Date(data["Date of Birth"]),
+                  designationId: designation.id,
+                  lastActive: new Date(),
+                  remarks: data["Remarks"] || "",
+                  country: data.Country || "",
+                  city: data.City || "",
+                  
+                });
 
-        
+                educationData.candidateId = existingCandidate.id;
+                updatedCount++;
+              } else {
+                // Create new candidate
                 const newCandidate = await Candidate.create({
                   name: data["Candidate Name"],
                   resumeTitle: data["Resume Title"] || "",
@@ -783,112 +1116,136 @@ const CandidateCtr = {
                   currentCTC: data["Current Annual Salary / CTC"],
                   currentLocation: data["Current Location"] || "",
                   state: data.State || "",
-                  currentEmployeer:data["currentEmployeer"] || "",
+                  currentEmployeer: data["currentEmployeer"] || "",
                   postalAddress: data["Postal Address"] || "",
                   preferredLocation: data["Preferred Location"] || "",
                   dob: new Date(data["Date of Birth"]),
                   designationId: designation.id,
                   lastActive: new Date(),
                   remarks: data["Remarks"] || "",
-                  // regionId: 1,
                   country: data.Country || "",
                   city: data.City || "",
                   UserId: req.user.id,
-                  
                 });
-                if (newCandidate) {
-                  educationData.candidateId = newCandidate.id;
-                }
-                if (data.Tags && typeof data.Tags === 'string') {
-  // Split the string by commas, then trim whitespace around each tag
-  const tags: string[] = data.Tags.split(',').map((tag: string) => tag.trim());
 
-  // Iterate over the array of tags
-  for (const tagName of tags) {
-    // Ensure the tag is not an empty string
-    if (tagName) {
-      try {
-        // Find or create the tag in the Tag table
-        const [tagData] = await Tag.findOrCreate({
-          where: { Tag_Name: tagName,Created_By:req.user.id },
-        });
-
-        // Create the association between the candidate and the tag
-        await CandidateTags.create({
-          candidateId: newCandidate.id,
-          tagId: tagData.id
-        });
-
-        console.log(`Tag "${tagName}" processed successfully.`);
-      } catch (err) {
-        console.error(`Error processing tag "${tagName}":`, err);
-      }
-    } else {
-      console.warn('Empty tag encountered, skipping.');
-    }
-  }
-} else {
-  console.warn('Invalid Tags format: Expected a comma-separated string.');
-}
-
-                
-  // Only create Education data if at least one course is provided
-  // const educationData = {
-  //   candidateId: newCandidate.id,
-  //   ugCourse: data.UG || null,  // Use `null` if the course is not provided
-  //   pgCourse: data.PG || null,
-  //   postPgCourse: data['Post PG'] || null
-  // };
-  
-  try {
-    // Only create Education entry if at least one course is provided
-    await Education.create(educationData);
-    console.log('Education data successfully added for candidate', newCandidate.id);
-  } catch (error) {
-    console.error('Error adding education data:', error);
-  }
-
-
-
+                educationData.candidateId = newCandidate.id;
                 importedCount++;
-              } catch (err: any) {
-                errors.push(
-                  `Failed to import candidate: ${data["Candidate Name"]}. Error: ${err.message}`
-                );
               }
-            }
+               // Only create Education entry if at least one course is provided
+               if (educationData.ugCourse || educationData.pgCourse || educationData.postPgCourse) {
+                const existingEducation = await Education.findOne({
+                  where: { candidateId: educationData.candidateId }
+                });
+              
+                if (existingEducation) {
+                  // Update existing education data
+                  await existingEducation.update(educationData);
+                  console.log('Education data successfully updated for candidate', educationData.candidateId);
+                } else {
+                  // Create new education data
+                  await Education.create(educationData);
+                  console.log('Education data successfully added for candidate', educationData.candidateId);
+                }
+              }
+              // Process tags
+              if (data.Tags && typeof data.Tags === 'string') {
+                const newTags: string[] = data.Tags.split(',').map((tag: string) => tag.trim());
+              
+                // Destroy all existing tags for the candidate
+                await CandidateTags.destroy({
+                  where: { candidateId: educationData.candidateId }
+                });
+              
+                // Add new tags
+                for (const tagName of newTags) {
+                  if (tagName) {
+                    try {
+                      let tagData;
+                      
+                        tagData = await Tag.findOne({
+                          where: { Tag_Name: tagName}
+                        })
+                        if (tagData && tagData.Created_By !== req.user.id && whoisUser.Type === "client") {
+                          //also we have to delete the candidate data and it's education data
+                          await Education.destroy({
+                            where: { candidateId: educationData.candidateId }
+                          });
+                          await Candidate.destroy({
+                            where: { id: educationData.candidateId }
+                          });
+                          importedCount--;
+                          updatedCount--;
+                          errors.push(
+                            `Tag "${tagName}" already exists and is not created by you.`
+                          );
+                          continue;
+                        }
+                        if (!tagData) {
+                          tagData = await Tag.create({
+                            Tag_Name: tagName,
+                            Created_By: req.user.id
+                          });
+                        } 
+                        
+                     
+              
+                      await CandidateTags.create({
+                        candidateId: educationData.candidateId,
+                        tagId: tagData.id,
+                      });
+              
+                      console.log(`Tag "${tagName}" processed successfully.`);
+                    } catch (err) {
+                      console.error(`Error processing tag "${tagName}":`, err);
+                    }
+                  } else {
+                    console.warn('Empty tag encountered, skipping.');
+                  }
+                }
+              } else {
+                console.warn('Invalid Tags format: Expected a comma-separated string.');
+              }
 
-            // Delete the file after processing
-            fs.unlinkSync(filePath);
+             
 
-            // Return the response with success and error details
-            if (errors.length > 0) {
-              return res.status(StatusCodes.PARTIAL_CONTENT).json({
-                message: `${importedCount} Candidate(s) Successfully Imported, but some failed.`,
-                success: true,
-                errors, // List of errors for failed candidates
-                importedCount, // Count of successful imports
-                failedCount: errors.length, // Count of failed imports
-                
-              });
-            } else {
-              return res.status(StatusCodes.CREATED).json({
-                message: `${importedCount} Candidate(s) Successfully Imported`,
-                success: true,
-                errors: [], // No errors in the success case
-                importedCount, // Count of successfully imported candidates
-              });
+
+            } catch (err: any) {
+              errors.push(
+                `Failed to import candidate: ${data["Candidate Name"]}. Error: ${err.message}`
+              );
             }
-            
-           
-          });
-      } catch (error: any) {
-        return res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .json({message: error.message});
-      }
+          }
+
+          // Delete the file after processing
+          fs.unlinkSync(filePath);
+
+          // Return the response with success and error details
+          if (errors.length > 0) {
+            return res.status(StatusCodes.PARTIAL_CONTENT).json({
+              message: `${importedCount} Candidate(s) Successfully Imported, but some failed.`,
+              success: true,
+              errors, // List of errors for failed candidates
+              importedCount, // Count of successful imports
+              failedCount: errors.length, // Count of failed imports
+              updatedCount, // Count of updated candidates
+            });
+          } else {
+            return res.status(StatusCodes.CREATED).json({
+              message: `${importedCount} Candidate(s) Successfully Imported`,
+              success: true,
+              errors: [], // No errors in the success case
+              importedCount, // Count of successfully imported candidates
+              updatedCount, // Count of updated candidates
+            });
+          }
+        });
+    } catch (error: any) {
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: error.message });
     }
-  ),
+  }
+),
   returnCandidateCsvFile: asyncHandler(
     async (req: Request, res: Response): Promise<any> => {
       try {

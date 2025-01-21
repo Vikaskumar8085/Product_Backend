@@ -87,15 +87,13 @@ const UserCtr = {
       // generate refresh token
     
       const refreshTokenValue = await refreshToken(response.id);
-      res.cookie("jwt", refreshTokenValue, {
-        httpOnly: true, //accessible only by web server
-        secure: true, //https
-        sameSite: "none", //cross-site cookie
-        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
-      });
+      console.log("refreshTokenValue", refreshTokenValue);
+      
+  
       return res.status(200).json({
         message: "Login Successfully",
         result: token,
+        refreshToken: refreshTokenValue,
         success: true,
       });
     } catch (error: any) {
@@ -106,15 +104,20 @@ const UserCtr = {
   refreshTokenCtr: asyncHandler(
     async (req: CustomRequest, res: Response): Promise<any> => {
       try {
-        const token = req.cookies;
-        console.log("token", token);
-        if (!token?.jwt) {
+        const {refreshTokens} = req.body;
+        console.log("refreshToken", refreshToken);
+        // const token = req.cookies;
+        // console.log("token", token);
+        // if (!token?.jwt) {
+        //   return res.status(400).json({message: "Unauthorized"});
+        // }
+        // const refreshTokenValues = token.jwt;
+        // console.log("refreshTokenValues", refreshTokenValues);
+        // console.log("refreshTokenValues", refreshTokenValues);
+        if (!refreshTokens) {
           return res.status(400).json({message: "Unauthorized"});
         }
-        const refreshTokenValues = token.jwt;
-        console.log("refreshTokenValues", refreshTokenValues);
-        console.log("refreshTokenValues", refreshTokenValues);
-        const decoded = jwt.verify(refreshTokenValues, process.env.JWT_SECRET as string) as jwt.JwtPayload;
+        const decoded = jwt.verify(refreshTokens, process.env.JWT_SECRET as string) as jwt.JwtPayload;
         console.log("decoded", decoded);
         const user = await User.findByPk(decoded.id);
         console.log("user", user);
@@ -126,19 +129,14 @@ const UserCtr = {
         const newToken =await generateToken(user.id);
         
         const refreshTokenValue =await refreshToken(user.id);
-        
+       
 
-        res.cookie("jwt", refreshTokenValue, {
-          httpOnly: true, // accessible only by web server
-          secure: true, // https in production
-          sameSite: "none", // cross-site cookie
-          maxAge: 7 * 24 * 60 * 60 * 1000, // cookie expiry: set to match rT
-        });
-
+       
         res.status(200).json({
           success: true,
           message: "Token Refreshed",
           result: newToken,
+          refreshToken: refreshTokenValue,
         });
       } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
@@ -388,6 +386,38 @@ const UserCtr = {
     } catch (error: any) {
       res.status(500).json({error: error.message});
     }
+  }),
+
+  gettoken: asyncHandler(async (req: CustomRequest, res: Response): Promise<any> => {
+    try {
+      const accessToken = await jwt.sign(
+        {
+          UserInfo: {
+            username: "1",
+          },
+        },
+        "secrete",
+        {expiresIn: "15m"}
+      );
+      console.log(accessToken);
+
+      const refreshToken = await jwt.sign(
+        {username: "1"},
+        "secrete",
+        {expiresIn: "7d"}
+      );
+      console.log(refreshToken);
+
+      // Create secure cookie with refresh token
+      res.cookie("jwt", refreshToken, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 86400), // 1 day
+        sameSite: "none",
+        secure: true,
+      });
+      res.json({accessToken});
+    } catch (error) {}
   }),
   
 };

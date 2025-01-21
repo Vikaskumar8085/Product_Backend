@@ -249,59 +249,35 @@ const DashboardCtr = {
 
         // Fetch the top 5 tags associated with the client
 
-        const clientTagCounts: { id: any; Tag_Name: any; clientCount: any; }[] = await sequelize.query(`
-
-          SELECT t.id, t.Tag_Name, COUNT(ct.ClientId) AS clientCount
-
+        const clientTagCounts: { id: any; Tag_Name: any; candidateCount: any; }[] = await sequelize.query(`
+          SELECT t.id, t.Tag_Name, COUNT(DISTINCT ct.candidateId) AS candidateCount
           FROM Tag t
-
-          LEFT JOIN Client_tags ct ON t.id = ct.tagId
-
-          WHERE ct.ClientId = :clientId
-
+          LEFT JOIN Client_tags ctg ON t.id = ctg.tagId
+          LEFT JOIN candidate_tags ct ON t.id = ct.tagId
+          WHERE ctg.ClientId = :clientId
           GROUP BY t.id
-
-          ORDER BY clientCount DESC
-
+          ORDER BY candidateCount DESC
           LIMIT 5
-
         `, {
-
           replacements: { clientId: client.id },
-
           type: QueryTypes.SELECT,
-
         });
 
 
         return res.status(200).json({
-
           success: true,
-
           data: {
-
- candidateTags: tagCounts.map((tag: { id: any; Tag_Name: any; candidateCount: any; }) => ({
-
+            candidateTags: tagCounts.map((tag: { id: any; Tag_Name: any; candidateCount: any; }) => ({
               id: tag.id,
-
               name: tag.Tag_Name,
-
               candidateCount: tag.candidateCount,
-
             })),
-
-            clientTags: clientTagCounts.map((tag: { id: any; Tag_Name: any; clientCount: any; }) => ({
-
+            clientTags: clientTagCounts.map((tag: { id: any; Tag_Name: any; candidateCount: any; }) => ({
               id: tag.id,
-
               name: tag.Tag_Name,
-
-              clientCount: tag.clientCount,
-
+              clientCount: tag.candidateCount,
             })),
-
           },
-
         });
 
       }
