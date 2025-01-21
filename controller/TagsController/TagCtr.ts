@@ -56,8 +56,16 @@ const TagCtr = {
           throw new Error("tag not found");
         }
         if (additmes && user.Type === "client"){
+          //find client id
+          const client = await Client.findOne({
+            where: {userId: req.user.id},
+          });
+          if (!client) {
+            res.status(StatusCodes.NOT_FOUND);
+            throw new Error("Client not found");
+          }
           await ClientTags.create({
-            ClientId: req.user.id,
+            ClientId: client.id,
             tagId: additmes.id,
         }
         );
